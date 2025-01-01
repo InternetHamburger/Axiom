@@ -1,10 +1,13 @@
-﻿namespace Axiom
+﻿using Axiom.src.core.Board;
+
+namespace Axiom
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            Console.WriteLine("Hello, World!");
+            Board board = new();
+            board.PrintBoard();
         }
     }
 }
