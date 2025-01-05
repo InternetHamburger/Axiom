@@ -26,7 +26,8 @@ namespace Axiom.src.core.Utility
             public readonly bool whiteCastleQueenside;
             public readonly bool blackCastleKingside;
             public readonly bool blackCastleQueenside;
-            // En passant file (1 is a-file, 8 is h-file, 0 means none)
+            public readonly int fullCastlingRights;
+            // En passant file (0 is a-file, 7 is h-file, -1 means none)
             public readonly int epFile;
             public readonly bool whiteToMove;
             // Number of half-moves since last capture or pawn advance
@@ -56,6 +57,7 @@ namespace Axiom.src.core.Utility
                     {
                         squareIndex += num;
                         fenIndex++;
+                        continue;
                     }
 
                     byte? piece = Piece.GetType(c);
@@ -81,6 +83,12 @@ namespace Axiom.src.core.Utility
                 whiteCastleQueenside = castlingRights.Contains('Q');
                 blackCastleKingside = castlingRights.Contains('k');
                 blackCastleQueenside = castlingRights.Contains('q');
+
+
+                fullCastlingRights = (whiteCastleKingside ? 1 : 0)
+                                   | (whiteCastleQueenside ? 4 : 0)
+                                   | (blackCastleKingside ? 8 : 0)
+                                   | (blackCastleQueenside ? 16 : 0);
 
                 // Default values
                 epFile = -1;

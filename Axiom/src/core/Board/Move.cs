@@ -42,6 +42,8 @@
         public int StartSquare => moveValue & startSquareMask;
         public int TargetSquare => (moveValue & targetSquareMask) >> 6;
         public bool IsPromotion => MoveFlag >= PromoteToQueenFlag;
+        public bool IsDoublePawnPush => MoveFlag == PawnTwoUpFlag;
+        public bool IsEnPassantCapture => MoveFlag == EnPassantCaptureFlag;
         public int MoveFlag => moveValue >> 12;
 
         public byte PromotionPieceType

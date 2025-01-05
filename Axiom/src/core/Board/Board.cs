@@ -4,17 +4,134 @@ namespace Axiom.src.core.Board
 {
     public sealed class Board
     {
-        public const string StartPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        public GameState CurrentGameState;
+        public bool WhiteToMove;
+        public readonly byte[] Squares;
+
+        private readonly Stack<GameState> GameHistory;
 
 
-        private byte[] Squares;
 
-        public Board(string fen = StartPos)
+        public Board(string fen = BoardUtility.StartPos)
         {
             Squares = new byte[64];
+            WhiteToMove = true;
+
+            CurrentGameState = new GameState();
+            GameHistory = new Stack<GameState>();
 
             SetPosition(fen);
         }
+
+        public void MakeMove(Move move)
+        {
+            int castlingRights = GameHistory.Peek().castlingRights;
+            int startSquare = move.StartSquare;
+            int targetSquare = move.TargetSquare;
+
+            byte movedPiece = Squares[startSquare];
+            byte capturedPiece = Squares[targetSquare];
+
+            int newEnpassantFile = -1;
+
+            Squares[targetSquare] = movedPiece;
+            Squares[startSquare] = Piece.None; // A move always leaves an empty square
+
+            if (move.IsDoublePawnPush)
+            {
+                newEnpassantFile = MoveUtility.File(targetSquare);
+            }
+            else if (move.IsPromotion)
+            {
+                Squares[targetSquare] = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
+            }
+            else if (move.IsEnPassantCapture)
+            {
+                int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
+                Squares[enPassantCaptureSquare] = Piece.None;
+            }
+            else if (move.MoveFlag == Move.CastleFlag)
+            {
+                switch (targetSquare)
+                {
+                    case 62: // white short castle (g1)
+                        Squares[61] = Squares[63];
+                        Squares[63] = Piece.None;
+                        castlingRights &= GameState.ClearWhiteKingsideMask;
+                        break;
+                    case 58: // white loing castle (c1)
+                        Squares[59] = Squares[56];
+                        Squares[56] = Piece.None;
+                        castlingRights &= GameState.ClearWhiteQueensideMask;
+                        break;
+                    case 6: // black short castle (g8)
+                        Squares[5] = Squares[7];
+                        Squares[7] = Piece.None;
+                        castlingRights &= GameState.ClearBlackKingsideMask;
+                        break;
+                    case 2: // black long castle (c8)
+                        Squares[3] = Squares[0];
+                        Squares[0] = Piece.None;
+                        castlingRights &= GameState.ClearBlackQueensideMask;
+                        break;
+                }
+            }
+
+            GameState newGameState = new(capturedPiece, newEnpassantFile, castlingRights, 0, 0);
+            CurrentGameState = newGameState;
+
+            WhiteToMove = !WhiteToMove;
+            GameHistory.Push(newGameState);
+        }
+
+        public void UndoMove(Move move)
+        {
+            WhiteToMove = !WhiteToMove;
+            int startSquare = move.StartSquare;
+            int targetSquare = move.TargetSquare;
+
+            byte movedPiece = Squares[targetSquare];
+            byte capturedPiece = CurrentGameState.capturedPieceType;
+
+            Squares[startSquare] = movedPiece;
+            Squares[targetSquare] = capturedPiece;
+
+            if (move.IsPromotion)
+            {
+                Squares[startSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.White : Piece.Black));
+            }
+            else if (move.IsEnPassantCapture)
+            {
+                int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
+                Squares[enPassantCaptureSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
+            }
+            else if (move.MoveFlag == Move.CastleFlag)
+            {
+                switch (targetSquare)
+                {
+                    case 62: // white short castle (g1)
+                        Squares[63] = Squares[61];
+                        Squares[61] = Piece.None;
+                        break;
+                    case 58: // white loing castle (c1)
+                        Squares[56] = Squares[59];
+                        Squares[59] = Piece.None;
+                        break;
+                    case 6: // black short castle (g8)
+                        Squares[7] = Squares[5];
+                        Squares[5] = Piece.None;
+                        break;
+                    case 2: // black long castle (c8)
+                        Squares[0] = Squares[3];
+                        Squares[3] = Piece.None;
+                        break;
+                }
+            }
+
+            CurrentGameState = GameHistory.Pop();
+        }
+
+
 
         public void SetPosition(string fen)
         {
@@ -24,38 +141,14 @@ namespace Axiom.src.core.Board
 
         public void SetPosition(FenUtility.PositionInfo pos)
         {
-            for (int squareIndex = 0; squareIndex < 64;  squareIndex++)
+            WhiteToMove = pos.whiteToMove;
+            for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
                 Squares[squareIndex] = pos.Squares[squareIndex];
             }
-        }
 
-        public void PrintBoard(bool fromWhitePerspective = true)
-        {
-            char[] b = new char[64];
-            for (int i = 0; i < 64; i++)
-            {
-                b[i] = Piece.GetSymbol(Squares[i]);
-            }
-
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*1-8]} | {b[8*1-7]} | {b[8*1-6]} | {b[8*1-5]} | {b[8*1-4]} | {b[8*1-3]} | {b[8*1-2]} | {b[8*1-1]} | 8");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*2-8]} | {b[8*2-7]} | {b[8*2-6]} | {b[8*2-5]} | {b[8*2-4]} | {b[8*2-3]} | {b[8*2-2]} | {b[8*2-1]} | 7");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*3-8]} | {b[8*3-7]} | {b[8*3-6]} | {b[8*3-5]} | {b[8*3-4]} | {b[8*3-3]} | {b[8*3-2]} | {b[8*3-1]} | 6");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*4-8]} | {b[8*4-7]} | {b[8*4-6]} | {b[8*4-5]} | {b[8*4-4]} | {b[8*4-3]} | {b[8*4-2]} | {b[8*4-1]} | 5");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*5-8]} | {b[8*5-7]} | {b[8*5-6]} | {b[8*5-5]} | {b[8*5-4]} | {b[8*5-3]} | {b[8*5-2]} | {b[8*5-1]} | 4");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*6-8]} | {b[8*6-7]} | {b[8*6-6]} | {b[8*6-5]} | {b[8*6-4]} | {b[8*6-3]} | {b[8*6-2]} | {b[8*6-1]} | 3");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*7-8]} | {b[8*7-7]} | {b[8*7-6]} | {b[8*7-5]} | {b[8*7-4]} | {b[8*7-3]} | {b[8*7-2]} | {b[8*7-1]} | 2");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine($" | {b[8*8-8]} | {b[8*8-7]} | {b[8*8-6]} | {b[8*8-5]} | {b[8*8-4]} | {b[8*8-3]} | {b[8*8-2]} | {b[8*8-1]} | 1");
-            Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-            Console.WriteLine("   a   b   c   d   e   f   g   h");
+            CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
+            GameHistory.Push(CurrentGameState);
         }
     }
 }

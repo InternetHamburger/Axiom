@@ -1,0 +1,17 @@
+TODO:
+- Add bitboard representation to board
+- Write move gen
+   - Add main piece loop
+   - Pawn gen
+      - Single push
+      - Double push
+      - Promotion
+      - En passant
+   - Knight 
+   - Sliding pieces
+      - Bishop
+      - rook
+      - Queen
+   - King gen
+      - Main gen
+      - Castling

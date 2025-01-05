@@ -7,19 +7,21 @@ using System.Threading.Tasks;
 
 namespace Axiom.src.core.Utility
 {
-    public static class BoardUtility
+    static class BitBoardUtlity
     {
-        public const string StartPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-        public const string files = "abcdefgh";
-        public const string ranks = "12345678";
-
-        public static void PrintBoard(Board.Board board, bool fromWhitePerspective = true)
+        public static void PrintBitBoard(ulong bitboard)
         {
             char[] b = new char[64];
             for (int i = 0; i < 64; i++)
             {
-                b[i] = Piece.GetSymbol(board.Squares[i]);
+                if (((bitboard >> i) & 1) == 1)
+                {
+                    b[i] = '1';
+                }
+                else
+                {
+                    b[i] = ' ';
+                }
             }
 
             Console.WriteLine(" +---+---+---+---+---+---+---+---+");

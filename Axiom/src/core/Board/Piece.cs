@@ -41,7 +41,7 @@ namespace Axiom.src.core.Board
         public const byte BlackQueen = Queen | Black;
         public const byte BlackKing = King | Black;
 
-        public const int MaxPieceIndex = BlackKing;
+        public const byte MaxPieceIndex = BlackKing;
 
 
         // Returns true if given piece matches the given colour. If piece is of type 'none', result will always be false.
