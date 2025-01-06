@@ -1,5 +1,4 @@
 TODO:
-- Add bitboard representation to board
 - Write move gen
    - Add main piece loop
    - Pawn gen

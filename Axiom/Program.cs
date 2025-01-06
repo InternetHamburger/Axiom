@@ -8,13 +8,8 @@ namespace Axiom
     {
         static void Main()
         {
-            Board board = new("8/8/8/8/8/8/8/R3K2R w KQ - 0 1");
-            BoardUtility.PrintBoard(board);
-            board.MakeMove(new Move(60, 58, Move.CastleFlag));
-            BoardUtility.PrintBoard(board);
-            board.UndoMove(new Move(60, 58, Move.CastleFlag));
-            BoardUtility.PrintBoard(board);
-
+            Board board = new();
+            BitBoardUtlity.PrintBitBoard(board.BitBoards[Piece.BlackKing]);
         }
     }
 }

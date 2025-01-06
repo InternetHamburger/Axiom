@@ -7,6 +7,7 @@ namespace Axiom.src.core.Board
         public GameState CurrentGameState;
         public bool WhiteToMove;
         public readonly byte[] Squares;
+        public ulong[] BitBoards;
 
         private readonly Stack<GameState> GameHistory;
 
@@ -15,6 +16,7 @@ namespace Axiom.src.core.Board
         public Board(string fen = BoardUtility.StartPos)
         {
             Squares = new byte[64];
+            BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             WhiteToMove = true;
 
             CurrentGameState = new GameState();
@@ -145,6 +147,9 @@ namespace Axiom.src.core.Board
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
                 Squares[squareIndex] = pos.Squares[squareIndex];
+
+                BitBoards[Squares[squareIndex]] |= 1UL << squareIndex;
+               
             }
 
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
