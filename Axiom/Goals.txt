@@ -1,4 +1,5 @@
 TODO:
+- Fix promotion for bitboards
 - Write move gen
    - Add main piece loop
    - Pawn gen

@@ -51,6 +51,15 @@ namespace Axiom.src.core.Board
 
         public static int PieceType(int piece) => piece & PieceTypeMask;
 
+        // Rook or Queen
+        public static bool IsOrthogonalSlider(int piece) => PieceType(piece) is Queen or Rook;
+
+        // Bishop or Queen
+        public static bool IsDiagonalSlider(int piece) => PieceType(piece) is Queen or Bishop;
+
+        // Bishop, Rook, or Queen
+        public static bool IsSlidingPiece(int piece) => PieceType(piece) is Queen or Bishop or Rook;
+
         public static char GetSymbol(int piece)
         {
             int pieceType = PieceType(piece);

@@ -14,6 +14,16 @@ namespace Axiom.src.core.Utility
         public const string files = "abcdefgh";
         public const string ranks = "12345678";
 
+        public static int File(int square) => square % 8;
+        public static int Rank(int square) => square / 8;
+
+        public static string NameOfSquare(int square)
+        {
+            int file = File(square);
+            int rank = 7 - Rank(square);
+            return files[file].ToString() + ranks[rank].ToString();
+        }
+
         public static void PrintBoard(Board.Board board, bool fromWhitePerspective = true)
         {
             char[] b = new char[64];

@@ -39,18 +39,23 @@ namespace Axiom.src.core.Board
             Squares[targetSquare] = movedPiece;
             Squares[startSquare] = Piece.None; // A move always leaves an empty square
 
+            BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
+
             if (move.IsDoublePawnPush)
             {
-                newEnpassantFile = MoveUtility.File(targetSquare);
+                newEnpassantFile = BoardUtility.File(targetSquare);
             }
             else if (move.IsPromotion)
             {
                 Squares[targetSquare] = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
+                BitBoards[Squares[targetSquare]] |= 1UL << targetSquare;
+                BitBoards[movedPiece] ^= 1UL << targetSquare;
             }
             else if (move.IsEnPassantCapture)
             {
                 int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
                 Squares[enPassantCaptureSquare] = Piece.None;
+                BitBoards[WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn] ^= 1UL << enPassantCaptureSquare;
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -59,21 +64,25 @@ namespace Axiom.src.core.Board
                     case 62: // white short castle (g1)
                         Squares[61] = Squares[63];
                         Squares[63] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
                         castlingRights &= GameState.ClearWhiteKingsideMask;
                         break;
                     case 58: // white loing castle (c1)
                         Squares[59] = Squares[56];
                         Squares[56] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
                         castlingRights &= GameState.ClearWhiteQueensideMask;
                         break;
                     case 6: // black short castle (g8)
                         Squares[5] = Squares[7];
                         Squares[7] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
                         castlingRights &= GameState.ClearBlackKingsideMask;
                         break;
                     case 2: // black long castle (c8)
                         Squares[3] = Squares[0];
                         Squares[0] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
                         castlingRights &= GameState.ClearBlackQueensideMask;
                         break;
                 }
@@ -106,6 +115,7 @@ namespace Axiom.src.core.Board
             {
                 int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
                 Squares[enPassantCaptureSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
+                BitBoards[Squares[enPassantCaptureSquare]] ^= 1UL << enPassantCaptureSquare;
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -114,18 +124,22 @@ namespace Axiom.src.core.Board
                     case 62: // white short castle (g1)
                         Squares[63] = Squares[61];
                         Squares[61] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
                         break;
                     case 58: // white loing castle (c1)
                         Squares[56] = Squares[59];
                         Squares[59] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
                         break;
                     case 6: // black short castle (g8)
                         Squares[7] = Squares[5];
                         Squares[5] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
                         break;
                     case 2: // black long castle (c8)
                         Squares[0] = Squares[3];
                         Squares[3] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
                         break;
                 }
             }
