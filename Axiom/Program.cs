@@ -9,9 +9,13 @@ namespace Axiom
     {
         static void Main()
         {
-            Board board = new("8/8/8/8/8/8/8/Q7 w - - 0 1");
-            MoveGenerator moveGenerator = new();
-            Console.WriteLine(moveGenerator.GetPseudoLegalMoves(board).Length);
+            Board board = new("4n3/5P2/8/8/8/3kq1q1/3P1P2/8 w - - 0 1");
+            BoardUtility.PrintBoard(board);
+            Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
+            foreach(Move move in moves)
+            {
+                Console.WriteLine(BoardUtility.MoveToUci(move));
+            }
         }
     }
 }

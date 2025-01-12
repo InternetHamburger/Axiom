@@ -14,11 +14,14 @@ namespace Axiom.src.core.Move_Generation
         public const int MaxNumMoves = 218;
 
 
-        public Move[] GetPseudoLegalMoves(Board.Board board)
+        public static Move[] GetPseudoLegalMoves(Board.Board board)
         {
             Move[] moves = new Move[MaxNumMoves];
             int numGeneratedMoves = 0;
             int color = board.WhiteToMove ? Piece.White : Piece.Black;
+
+            // Generate pawn moves independtently of main loop
+            GeneratePawnMoves(board, ref moves, ref numGeneratedMoves);
 
             for (int i = 0; i < 64; i++)
             {
@@ -52,7 +55,7 @@ namespace Axiom.src.core.Move_Generation
 
 
 
-        private void GenerateSlidingMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, byte piece, int square)
+        private static void GenerateSlidingMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, byte piece, int square)
         {
             int startIndex = Piece.IsOrthogonalSlider(piece) ? 0 : 4;
             int endIndex = Piece.IsDiagonalSlider(piece) ? 8 : 4;
@@ -70,9 +73,10 @@ namespace Axiom.src.core.Move_Generation
                     {
                         break;
                     }
-                    Console.WriteLine(BoardUtility.NameOfSquare(square) + BoardUtility.NameOfSquare(targetSquare));
+
                     moves[numGeneratedMoves++] = new Move(square, targetSquare);
 
+                    // Blocked by enemy piece
                     if (Piece.IsColour(pieceOnTargetSquare, board.WhiteToMove ? 8 : 0))
                     {
                         break;
@@ -81,5 +85,107 @@ namespace Axiom.src.core.Move_Generation
             }
         }
 
+
+        private static void GeneratePawnMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves)
+        {
+            if (board.WhiteToMove)
+            {
+                ulong pawns = board.BitBoards[Piece.WhitePawn];
+                ulong pawnMoves;
+
+                // Double pawn pushes
+                pawnMoves = (pawns & MoveGenConstants.WhiteStartRank) >> 8;
+                pawnMoves &= ~board.AllPieceBitBoard;
+                pawnMoves >>= 8;
+                pawnMoves &= ~board.AllPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 16, targetSquare, Move.PawnTwoUpFlag);
+                }
+
+                // Single pawn pushes
+                // Filter out promotion moves
+                pawnMoves = (pawns & MoveGenConstants.WhiteMoveMask) >> 8;
+                pawnMoves &= ~board.AllPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 8, targetSquare);
+                }
+
+                // Capture right
+                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask & MoveGenConstants.WhiteMoveMask) >> 7;
+                pawnMoves &= board.BlackPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 7, targetSquare);
+                }
+
+                // Capture left
+                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureLeftMask & MoveGenConstants.WhiteMoveMask) >> 9;
+                pawnMoves &= board.BlackPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 9, targetSquare);
+                }
+
+
+                // Promotion
+                // Single pawn pushes
+                pawnMoves = (pawns & MoveGenConstants.WhitePromotionMask) >> 8;
+                pawnMoves &= ~board.AllPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 8, targetSquare, Move.PromoteToQueenFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 8, targetSquare, Move.PromoteToRookFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 8, targetSquare, Move.PromoteToBishopFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 8, targetSquare, Move.PromoteToKnightFlag);
+                }
+
+                // Capture right
+                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask & MoveGenConstants.WhitePromotionMask) >> 7;
+                pawnMoves &= board.BlackPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 7, targetSquare, Move.PromoteToQueenFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 7, targetSquare, Move.PromoteToRookFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 7, targetSquare, Move.PromoteToBishopFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 7, targetSquare, Move.PromoteToKnightFlag);
+                }
+
+                // Capture left
+                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureLeftMask & MoveGenConstants.WhitePromotionMask) >> 9;
+                pawnMoves &= board.BlackPieceBitBoard;
+
+                while (pawnMoves != 0)
+                {
+                    int targetSquare = BitBoardUtlity.PopLSB(ref pawnMoves);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 9, targetSquare, Move.PromoteToQueenFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 9, targetSquare, Move.PromoteToRookFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 9, targetSquare, Move.PromoteToBishopFlag);
+                    moves[numGeneratedMoves++] = new Move(targetSquare + 9, targetSquare, Move.PromoteToKnightFlag);
+                }
+
+            }
+
+
+
+
+
+
+
+
+        }
     }
 }

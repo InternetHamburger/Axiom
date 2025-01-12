@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,6 +9,26 @@ namespace Axiom.src.core.Move_Generation
 {
     public static class MoveGenConstants
     {
+        public const ulong AFileMask = 0x0101010101010101;
+        public const ulong FirstRankMask = 0xFF00000000000000;
+
+        public const ulong WhiteMoveMask = ~BlackStartRank;
+        public const ulong BlackMoveMask = ~WhiteStartRank;
+
+        public const ulong WhitePawnCaptureRightMask = ~(AFileMask << 7);
+        public const ulong WhitePawnCaptureLeftMask = ~AFileMask;
+
+        public const ulong BlackPawnCaptureRightMask = WhitePawnCaptureLeftMask;
+        public const ulong BlackPawnCaptureLeftMask = WhitePawnCaptureRightMask;
+
+        public const ulong WhiteStartRank = FirstRankMask >> 8;
+        public const ulong BlackStartRank = FirstRankMask >> 48;
+
+        public const ulong WhitePromotionMask = BlackStartRank;
+        public const ulong BlackPromotionMask = WhiteStartRank;
+
+
+
         public static readonly int[] DirectionOffSets = [-8, 8, -1, 1, -9, 9, -7, 7];
 
         public static readonly int[,] numSquaresToEdge =

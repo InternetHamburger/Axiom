@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,13 @@ namespace Axiom.src.core.Utility
             Console.WriteLine($" | {b[8 * 8 - 8]} | {b[8 * 8 - 7]} | {b[8 * 8 - 6]} | {b[8 * 8 - 5]} | {b[8 * 8 - 4]} | {b[8 * 8 - 3]} | {b[8 * 8 - 2]} | {b[8 * 8 - 1]} | 1");
             Console.WriteLine(" +---+---+---+---+---+---+---+---+");
             Console.WriteLine("   a   b   c   d   e   f   g   h");
+        }
+
+        public static int PopLSB(ref ulong bitboard)
+        {
+            int LSPpos = BitOperations.TrailingZeroCount(bitboard);
+            bitboard &= ~(1UL << LSPpos);
+            return LSPpos;
         }
     }
 }

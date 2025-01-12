@@ -24,6 +24,16 @@ namespace Axiom.src.core.Utility
             return files[file].ToString() + ranks[rank].ToString();
         }
 
+        public static string MoveToUci(Move move)
+        {
+            string startSqare = NameOfSquare(move.StartSquare);
+            string targetSquare = NameOfSquare(move.TargetSquare);
+
+            string promotionPiece = move.IsPromotion ? Piece.GetSymbol(move.PromotionPieceType).ToString().ToLower() : "";
+
+            return startSqare + targetSquare + promotionPiece;
+        }
+
         public static void PrintBoard(Board.Board board, bool fromWhitePerspective = true)
         {
             char[] b = new char[64];
