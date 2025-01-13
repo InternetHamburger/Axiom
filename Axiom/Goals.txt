@@ -1,12 +1,6 @@
 TODO:
 - Fix promotion for bitboards
 - Write move gen
-   - Add main piece loop
-   - Pawn gen
-      - Single push
-      - Double push
-      - Promotion
-      - En passant
    - Knight 
    - Sliding pieces
       - Bishop

@@ -9,12 +9,9 @@ namespace Axiom
     {
         static void Main()
         {
-            Board board = new("4n3/5P2/8/8/8/3kq1q1/3P1P2/8 w - - 0 1");
-            BoardUtility.PrintBoard(board);
-            Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
-            foreach(Move move in moves)
+            foreach(ulong bitboard in PreComputedMoveData.KnightAttacks)
             {
-                Console.WriteLine(BoardUtility.MoveToUci(move));
+                BitBoardUtlity.PrintBitBoard(bitboard);
             }
         }
     }

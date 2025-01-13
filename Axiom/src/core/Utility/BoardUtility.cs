@@ -24,6 +24,13 @@ namespace Axiom.src.core.Utility
             return files[file].ToString() + ranks[rank].ToString();
         }
 
+        public static int NameOfSquare(string square)
+        {
+            int file = files.IndexOf(square[0]);
+            int rank = 7 - ranks.IndexOf(square[1]);
+            return file + 8 * rank;
+        }
+
         public static string MoveToUci(Move move)
         {
             string startSqare = NameOfSquare(move.StartSquare);

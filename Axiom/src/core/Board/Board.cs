@@ -165,7 +165,6 @@ namespace Axiom.src.core.Board
                 BitBoards[Squares[squareIndex]] |= 1UL << squareIndex;
                
             }
-
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
             GameHistory.Push(CurrentGameState);
         }
