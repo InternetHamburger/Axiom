@@ -1,11 +1,6 @@
 TODO:
 - Fix promotion for bitboards
 - Write move gen
-   - Knight 
-   - Sliding pieces
-      - Bishop
-      - rook
-      - Queen
    - King gen
       - Main gen
       - Castling

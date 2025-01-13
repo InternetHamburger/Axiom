@@ -35,6 +35,9 @@ namespace Axiom.src.core.Move_Generation
                     }
                     switch (Piece.PieceType(piece))
                     {
+                        case Piece.Knight:
+                            GenerateKnightMoves(board, ref moves, ref numGeneratedMoves, i);
+                            break;
                     }
 
                 }
@@ -299,7 +302,7 @@ namespace Axiom.src.core.Move_Generation
                 // En passant
                 if (board.CurrentGameState.enPassantFile != -1)
                 {
-                    ulong enPassantSquareMask = 1UL << (board.CurrentGameState.enPassantFile + 16);
+                    ulong enPassantSquareMask = 1UL << (board.CurrentGameState.enPassantFile + 40);
                     BitBoardUtlity.PrintBitBoard(enPassantSquareMask);
 
                     // Capture right
@@ -326,11 +329,18 @@ namespace Axiom.src.core.Move_Generation
             }
         }
 
+
         private static void GenerateKnightMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, int square)
         {
             ulong possibleMoves = PreComputedMoveData.KnightAttacks[square];
 
-            possibleMoves &= 
+            possibleMoves &= ~(board.WhiteToMove ? board.WhitePieceBitBoard : board.BlackPieceBitBoard);
+
+            while (possibleMoves != 0)
+            {
+                int targetSquare = BitBoardUtlity.PopLSB(ref possibleMoves);
+                moves[numGeneratedMoves++] = new Move(square, targetSquare);
+            }
         }
     }
 }
