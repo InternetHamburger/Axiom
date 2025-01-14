@@ -1,5 +1,6 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
+using Axiom.src.core.Perft;
 using Axiom.src.core.Utility;
 using System.Numerics;
 
@@ -9,10 +10,7 @@ namespace Axiom
     {
         static void Main()
         {
-            foreach(ulong bitboard in PreComputedMoveData.KnightAttacks)
-            {
-                BitBoardUtlity.PrintBitBoard(bitboard);
-            }
+            Perft.PerftSearch(BoardUtility.StartPos, 1);
         }
     }
 }

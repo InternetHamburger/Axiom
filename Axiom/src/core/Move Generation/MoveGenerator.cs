@@ -33,13 +33,14 @@ namespace Axiom.src.core.Move_Generation
                     {
                         GenerateSlidingMoves(board, ref moves, ref numGeneratedMoves, piece, i);
                     }
-                    switch (Piece.PieceType(piece))
+                    else if (Piece.PieceType(piece) == Piece.Knight)
                     {
-                        case Piece.Knight:
-                            GenerateKnightMoves(board, ref moves, ref numGeneratedMoves, i);
-                            break;
+                        GenerateKnightMoves(board, ref moves, ref numGeneratedMoves, i);
                     }
-
+                    else if (Piece.PieceType(piece) == Piece.King)
+                    {
+                        GenerateKingMoves(board, ref moves, ref numGeneratedMoves, i);
+                    }
                 }
             }
 
@@ -88,7 +89,7 @@ namespace Axiom.src.core.Move_Generation
             }
         }
 
-
+        
         private static void GeneratePawnMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves)
         {
             if (board.WhiteToMove)
@@ -342,5 +343,45 @@ namespace Axiom.src.core.Move_Generation
                 moves[numGeneratedMoves++] = new Move(square, targetSquare);
             }
         }
+
+        
+        private static void GenerateKingMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, int square)
+        {
+            ulong possibleMoves = PreComputedMoveData.KingAttacks[square];
+            
+            possibleMoves &= ~(board.WhiteToMove ? board.WhitePieceBitBoard : board.BlackPieceBitBoard);
+
+            while (possibleMoves != 0)
+            {
+                int targetSquare = BitBoardUtlity.PopLSB(ref possibleMoves);
+                moves[numGeneratedMoves++] = new Move(square, targetSquare);
+            }
+
+            int castlingRights = board.CurrentGameState.castlingRights;
+            Console.WriteLine(castlingRights);
+            if (board.WhiteToMove)
+            {
+                if ((1 & castlingRights) == 1) // Short castle
+                {
+                    moves[numGeneratedMoves++] = new Move(60, 62, Move.CastleFlag);
+                }
+                if ((2 & castlingRights) == 2) // Long castle
+                {
+                    moves[numGeneratedMoves++] = new Move(60, 58, Move.CastleFlag);
+                }
+            }
+            else
+            {
+                if ((4 & castlingRights) == 4) // Short castle
+                {
+                    moves[numGeneratedMoves++] = new Move(4, 6, Move.CastleFlag);
+                }
+                if ((8 & castlingRights) == 8) // Long castle
+                {
+                    moves[numGeneratedMoves++] = new Move(4, 2, Move.CastleFlag);
+                }
+            }
+        }
+
     }
 }

@@ -6,40 +6,72 @@ namespace Axiom.src.core.Move_Generation
     public static class PreComputedMoveData
     {
         public static readonly ulong[] KnightAttacks;
+        public static readonly ulong[] KingAttacks;
 
         static PreComputedMoveData()
         {
             KnightAttacks = new ulong[64];
+            KingAttacks = new ulong[64];
 
             int[] allKnightJumps = { 15, 17, -17, -15, 10, -6, 6, -10 };
 
 
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
-                int y = BoardUtility.Rank(squareIndex);
-                int x = squareIndex - y * 8;
+                int rank = BoardUtility.Rank(squareIndex);
+                int file = squareIndex - rank * 8;
+
+
 
                 ulong knightBitboard = 0;
+               
                 foreach (int knightJumpDelta in allKnightJumps)
                 {
                     int knightJumpSquare = squareIndex + knightJumpDelta;
                     if (knightJumpSquare >= 0 && knightJumpSquare < 64)
                     {
-                        int knightSquareY = BoardUtility.Rank(knightJumpSquare);
-                        int knightSquareX = knightJumpSquare - knightSquareY * 8;
+                        int knightSquareRank = BoardUtility.Rank(knightJumpSquare);
+                        int knightSquareFile = knightJumpSquare - knightSquareRank * 8;
                         // Ensure knight has moved max of 2 squares on x/y axis (to reject indices that have wrapped around side of board)
-                        int maxCoordMoveDst = System.Math.Max(System.Math.Abs(x - knightSquareX), System.Math.Abs(y - knightSquareY));
+                        int maxCoordMoveDst = System.Math.Max(System.Math.Abs(file - knightSquareFile), System.Math.Abs(rank - knightSquareRank));
                         if (maxCoordMoveDst == 2)
                         {
                             knightBitboard |= 1ul << knightJumpSquare;
                         }
                     }
                 }
-
+                KingAttacks[squareIndex] = ComputeKingAttacks(squareIndex);
                 KnightAttacks[squareIndex] = knightBitboard;
             }
         }
 
+
+        static ulong ComputeKingAttacks(int square)
+        {
+            ulong attacks = 0UL;
+
+            int rank = square / 8;
+            int file = square % 8;
+
+            // Relative moves of the king
+            int[] dr = { -1, -1, -1, 0, 0, 1, 1, 1 }; // Row deltas
+            int[] df = { -1, 0, 1, -1, 1, -1, 0, 1 }; // File deltas
+
+            for (int i = 0; i < 8; i++)
+            {
+                int newRank = rank + dr[i];
+                int newFile = file + df[i];
+
+                // Check if the new position is on the board
+                if (newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8)
+                {
+                    int newSquare = newRank * 8 + newFile;
+                    attacks |= 1UL << newSquare;
+                }
+            }
+
+            return attacks;
+        }
 
     }
 }

@@ -27,6 +27,8 @@ namespace Axiom.src.core.Move_Generation
         public const ulong WhitePromotionMask = BlackStartRank;
         public const ulong BlackPromotionMask = WhiteStartRank;
 
+        public const ulong WhiteCastleKing = (1UL << 62) | (1UL << 61);
+
 
 
         public static readonly int[] DirectionOffSets = [-8, 8, -1, 1, -9, 9, -7, 7];

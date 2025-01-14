@@ -2,5 +2,4 @@ TODO:
 - Fix promotion for bitboards
 - Write move gen
    - King gen
-      - Main gen
       - Castling
