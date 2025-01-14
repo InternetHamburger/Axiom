@@ -1,5 +1,7 @@
 TODO:
-- Fix promotion for bitboards
-- Write move gen
-   - King gen
-      - Castling
+- Fix castle bug
+
+
+
+IDEAS:
+- Speed up checking for check with ray masks

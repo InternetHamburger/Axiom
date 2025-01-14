@@ -186,7 +186,6 @@ namespace Axiom.src.core.Move_Generation
                 if (board.CurrentGameState.enPassantFile != -1)
                 {
                     ulong enPassantSquareMask = 1UL << (board.CurrentGameState.enPassantFile + 16);
-                    BitBoardUtlity.PrintBitBoard(enPassantSquareMask);
 
                     // Capture right
                     pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask) >> 7;
@@ -261,7 +260,7 @@ namespace Axiom.src.core.Move_Generation
 
                 // Promotion
                 // Single pawn pushes
-                pawnMoves = (pawns & MoveGenConstants.WhitePromotionMask) << 8;
+                pawnMoves = (pawns & MoveGenConstants.BlackPromotionMask) << 8;
                 pawnMoves &= ~board.AllPieceBitBoard;
 
                 while (pawnMoves != 0)
@@ -274,7 +273,7 @@ namespace Axiom.src.core.Move_Generation
                 }
 
                 // Capture right
-                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask & MoveGenConstants.WhitePromotionMask) << 7;
+                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask & MoveGenConstants.BlackPromotionMask) << 7;
                 pawnMoves &= board.WhitePieceBitBoard;
 
                 while (pawnMoves != 0)
@@ -304,7 +303,6 @@ namespace Axiom.src.core.Move_Generation
                 if (board.CurrentGameState.enPassantFile != -1)
                 {
                     ulong enPassantSquareMask = 1UL << (board.CurrentGameState.enPassantFile + 40);
-                    BitBoardUtlity.PrintBitBoard(enPassantSquareMask);
 
                     // Capture right
                     pawnMoves = (pawns & MoveGenConstants.BlackPawnCaptureRightMask) << 7;
@@ -358,25 +356,24 @@ namespace Axiom.src.core.Move_Generation
             }
 
             int castlingRights = board.CurrentGameState.castlingRights;
-            Console.WriteLine(castlingRights);
             if (board.WhiteToMove)
             {
-                if ((1 & castlingRights) == 1) // Short castle
+                if ((1 & castlingRights) == 1 && (board.AllPieceBitBoard & MoveGenConstants.WhiteCastleKingSide) == 0) // Short castle
                 {
                     moves[numGeneratedMoves++] = new Move(60, 62, Move.CastleFlag);
                 }
-                if ((2 & castlingRights) == 2) // Long castle
+                if ((2 & castlingRights) == 2 && (board.AllPieceBitBoard & MoveGenConstants.WhiteCastleQueenSide) == 0) // Long castle
                 {
                     moves[numGeneratedMoves++] = new Move(60, 58, Move.CastleFlag);
                 }
             }
             else
             {
-                if ((4 & castlingRights) == 4) // Short castle
+                if ((4 & castlingRights) == 4 && (board.AllPieceBitBoard & MoveGenConstants.BlackCastleKingSide) == 0) // Short castle
                 {
                     moves[numGeneratedMoves++] = new Move(4, 6, Move.CastleFlag);
                 }
-                if ((8 & castlingRights) == 8) // Long castle
+                if ((8 & castlingRights) == 8 && (board.AllPieceBitBoard & MoveGenConstants.BlackCastleQueenSide) == 0) // Long castle
                 {
                     moves[numGeneratedMoves++] = new Move(4, 2, Move.CastleFlag);
                 }

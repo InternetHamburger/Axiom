@@ -2,7 +2,6 @@
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Perft;
 using Axiom.src.core.Utility;
-using System.Numerics;
 
 namespace Axiom
 {
@@ -10,7 +9,11 @@ namespace Axiom
     {
         static void Main()
         {
-            Perft.PerftSearch(BoardUtility.StartPos, 1);
+            //string fen = BoardUtility.StartPos;
+            //Board board = new(fen);
+            //BoardUtility.PrintBoard(board);
+            //Perft.PerftSearch(fen, 3);
+
         }
     }
 }

@@ -1,11 +1,6 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Axiom.src.core.Perft
 {
@@ -32,6 +27,7 @@ namespace Axiom.src.core.Perft
                 board.UndoMove(move);
                 totalNodes += nodes;
                 Console.WriteLine($"{BoardUtility.MoveToUci(move)}: {nodes}");
+                //BitBoardUtlity.PrintBitBoard(board.AllPieceBitBoard);
             }
             Console.WriteLine("Nodes searched: " + totalNodes);
         }

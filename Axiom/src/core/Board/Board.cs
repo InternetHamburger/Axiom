@@ -1,4 +1,5 @@
-﻿using Axiom.src.core.Utility;
+﻿using Axiom.src.core.Move_Generation;
+using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Board
 {
@@ -8,6 +9,7 @@ namespace Axiom.src.core.Board
         public bool WhiteToMove;
         public readonly byte[] Squares;
         public ulong[] BitBoards;
+        public int[] KingSquares;
 
         private readonly Stack<GameState> GameHistory;
 
@@ -17,6 +19,7 @@ namespace Axiom.src.core.Board
         {
             Squares = new byte[64];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
+            KingSquares = new int[2];
             WhiteToMove = true;
 
             CurrentGameState = new GameState();
@@ -40,6 +43,11 @@ namespace Axiom.src.core.Board
             Squares[startSquare] = Piece.None; // A move always leaves an empty square
 
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
+
+            if (Piece.PieceType(movedPiece) == Piece.King)
+            {
+                KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
+            }
 
             if (move.IsDoublePawnPush)
             {
@@ -106,10 +114,17 @@ namespace Axiom.src.core.Board
 
             Squares[startSquare] = movedPiece;
             Squares[targetSquare] = capturedPiece;
+            BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
+
+            if (Piece.PieceType(movedPiece) == Piece.King)
+            {
+                KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
+            }
 
             if (move.IsPromotion)
             {
                 Squares[startSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.White : Piece.Black));
+                BitBoards[movedPiece] ^= 1UL << startSquare;
             }
             else if (move.IsEnPassantCapture)
             {
@@ -147,6 +162,37 @@ namespace Axiom.src.core.Board
             CurrentGameState = GameHistory.Pop();
         }
 
+        public bool IsInCheck()
+        {
+            int square = KingSquares[WhiteToMove ? 0 : 1];
+            for (int directionIndex = 0; directionIndex < 8; directionIndex++)
+            {
+                for (int n = 0; n < MoveGenConstants.numSquaresToEdge[square, directionIndex]; n++)
+                {
+
+                    int targetSquare = square + MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1);
+                    byte pieceOnTargetSquare = Squares[targetSquare];
+
+                    // Blocked by friendly piece
+                    if (Piece.IsColour(pieceOnTargetSquare, WhiteToMove ? 0 : 8))
+                    {
+                        break;
+                    }
+
+                    // Blocked by enemy piece
+                    if (Piece.IsColour(pieceOnTargetSquare, WhiteToMove ? 8 : 0))
+                    {
+                        if (pieceOnTargetSquare)
+
+                        break;
+                    }
+                }
+            }
+
+
+            return false;
+        }
+
 
 
         public void SetPosition(string fen)
@@ -168,6 +214,8 @@ namespace Axiom.src.core.Board
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
             GameHistory.Push(CurrentGameState);
         }
+
+
 
         public ulong AllPieceBitBoard => BitBoards[Piece.WhitePawn] | BitBoards[Piece.BlackPawn] | BitBoards[Piece.WhiteKnight] | BitBoards[Piece.BlackKnight] | BitBoards[Piece.WhiteBishop] | BitBoards[Piece.BlackBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.BlackRook] | BitBoards[Piece.WhiteQueen] | BitBoards[Piece.BlackQueen] | BitBoards[Piece.WhiteKing] | BitBoards[Piece.BlackKing];
         public ulong WhitePieceBitBoard => BitBoards[Piece.WhitePawn] | BitBoards[Piece.WhiteKnight] | BitBoards[Piece.WhiteBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.WhiteQueen] | BitBoards[Piece.WhiteKing];
