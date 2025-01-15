@@ -1,5 +1,6 @@
 TODO:
 - Fix castle bug
+- Check for illegal castling in search
 
 
 
