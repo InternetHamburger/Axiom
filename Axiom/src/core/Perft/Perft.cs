@@ -23,13 +23,46 @@ namespace Axiom.src.core.Perft
             foreach(Move move in moves)
             {
                 board.MakeMove(move);
+                if (board.IsInCheck())
+                {
+                    continue;
+                }
                 nodes = SearchNoBulk(board, depth - 1);
                 board.UndoMove(move);
                 totalNodes += nodes;
                 Console.WriteLine($"{BoardUtility.MoveToUci(move)}: {nodes}");
                 //BitBoardUtlity.PrintBitBoard(board.AllPieceBitBoard);
             }
-            Console.WriteLine("Nodes searched: " + totalNodes);
+            Console.WriteLine("\nNodes searched: " + totalNodes);
+        }
+
+        public static void PerftSearch(Board.Board board, int depth)
+        {
+
+            if (depth == 0)
+            {
+                Console.WriteLine("Nodes searched: " + 1);
+                return;
+            }
+
+            Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
+
+            ulong totalNodes = 0;
+            ulong nodes = 0;
+            foreach (Move move in moves)
+            {
+                board.MakeMove(move);
+                if (board.IsInCheck())
+                {
+                    continue;
+                }
+                nodes = SearchNoBulk(board, depth - 1);
+                board.UndoMove(move);
+                totalNodes += nodes;
+                Console.WriteLine($"{BoardUtility.MoveToUci(move)}: {nodes}");
+                //BitBoardUtlity.PrintBitBoard(board.AllPieceBitBoard);
+            }
+            Console.WriteLine("\nNodes searched: " + totalNodes);
         }
 
         public static ulong SearchNoBulk(Board.Board board, int depth)

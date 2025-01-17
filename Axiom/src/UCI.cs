@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Axiom.src.core.Board;
+using Axiom.src.core.Perft;
+using Axiom.src.core.Utility;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -9,6 +12,14 @@ namespace Axiom.src
 {
     public class UCI
     {
+
+        private Board board;
+
+        public UCI()
+        {
+            board = new Board();
+        }
+
         public void ReciveCommand(string input)
         {
             input = input.Trim();
@@ -23,6 +34,21 @@ namespace Axiom.src
                 case "position":
                     HandlePositionCommand(input);
                     break;
+                case "go":
+                    HandleGoCommand(input);
+                    break;
+                case "all":
+                    BoardUtility.PrintBoard(board);
+                    for (int i = 0; i < board.BitBoards.Length; i++)
+                    {
+                        ulong bitboard = board.BitBoards[i];
+                        Console.WriteLine("\n\n" + i);
+                        BitBoardUtlity.PrintBitBoard(bitboard);
+                    }
+                    break;
+                default:
+                    Console.WriteLine("Unknown message");
+                    break;
             }
         }
         private void RespondUCI()
@@ -34,8 +60,28 @@ namespace Axiom.src
         private void HandlePositionCommand(string input)
         {
             string[] tokens = input.Split(' ');
-            string fen = tokens[1] + tokens[2] + tokens[3] + tokens[4] + tokens[5] + tokens[6];
+            string fen = "";
 
+            for (int i = 2; i < 7; i++)
+            {
+                if (tokens[i] == "moves")
+                {
+                    break;
+                }
+                else
+                {
+                    fen += tokens[i] + " ";
+                }
+            }
+
+            board.SetPosition(fen);
+        }
+
+        private void HandleGoCommand(string input)
+        {
+            int depth = int.Parse(input.Split(' ')[2]);
+
+            Perft.PerftSearch(board, depth);
         }
     }
 }
