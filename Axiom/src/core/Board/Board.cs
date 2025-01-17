@@ -46,23 +46,7 @@ namespace Axiom.src.core.Board
 
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
-                if (WhiteToMove)
-                {
-                    castlingRights &= GameState.ClearWhiteKingsideMask;
-                    castlingRights &= GameState.ClearWhiteQueensideMask;
-                }
-                else
-                {
-                    castlingRights &= GameState.ClearBlackKingsideMask;
-                    castlingRights &= GameState.ClearBlackQueensideMask;
-                }
                 KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
-            }
-
-            // Move is a capture
-            if (capturedPiece != Piece.None)
-            {
-                BitBoards[capturedPiece] ^= 1UL << targetSquare;
             }
 
             if (move.IsDoublePawnPush)
@@ -71,17 +55,15 @@ namespace Axiom.src.core.Board
             }
             else if (move.IsPromotion)
             {
-                byte promotionPiece = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
+                Squares[targetSquare] = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
+                BitBoards[Squares[targetSquare]] |= 1UL << targetSquare;
                 BitBoards[movedPiece] ^= 1UL << targetSquare;
-                BitBoards[promotionPiece] ^= 1UL << targetSquare;
-                Squares[targetSquare] = promotionPiece;
             }
             else if (move.IsEnPassantCapture)
             {
                 int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
-                byte capturedPawn = WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn;
                 Squares[enPassantCaptureSquare] = Piece.None;
-                BitBoards[capturedPawn] ^= 1UL << enPassantCaptureSquare;
+                BitBoards[WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn] ^= 1UL << enPassantCaptureSquare;
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -136,8 +118,9 @@ namespace Axiom.src.core.Board
 
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
-                KingSquares[WhiteToMove ? 0 : 1] = startSquare;
+                KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
             }
+
             if (move.IsPromotion)
             {
                 Squares[startSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.White : Piece.Black));
