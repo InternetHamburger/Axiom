@@ -37,14 +37,11 @@ namespace Axiom.src
                 case "go":
                     HandleGoCommand(input);
                     break;
-                case "all":
+                case "d":
+                    Console.WriteLine();
                     BoardUtility.PrintBoard(board);
-                    for (int i = 0; i < board.BitBoards.Length; i++)
-                    {
-                        ulong bitboard = board.BitBoards[i];
-                        Console.WriteLine("\n\n" + i);
-                        BitBoardUtlity.PrintBitBoard(bitboard);
-                    }
+                    Console.WriteLine("\nFen: " + FenUtility.GetFen(board));
+
                     break;
                 default:
                     Console.WriteLine("Unknown message");

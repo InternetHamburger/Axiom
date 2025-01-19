@@ -124,10 +124,10 @@ namespace Axiom.src.core.Perft
                     switch (move.TargetSquare)
                     {
                         case 62: // white short castle (g1)
-                            if (board.IsUnderAttack(61, false) || board.IsUnderAttack(62, false)) { continue; }
+                            if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) { continue; }
                             break;
                         case 58: // white loing castle (c1)
-                            if (board.IsUnderAttack(58, false) || board.IsUnderAttack(59, false)) { continue; }
+                            if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) { continue; }
                             break;
                         case 6: // black short castle (g8)
                             if (board.IsUnderAttack(5, false) || board.IsUnderAttack(6, false)) { continue; }
