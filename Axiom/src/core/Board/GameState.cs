@@ -2,7 +2,7 @@
 {
     public readonly struct GameState
     {
-        public readonly byte capturedPieceType;
+        public readonly byte capturedPiece;
         public readonly int enPassantFile;
         public readonly int castlingRights;
         public readonly int fiftyMoveCounter;
@@ -13,9 +13,9 @@
         public const int ClearBlackKingsideMask = 0b1011;
         public const int ClearBlackQueensideMask = 0b0111;
 
-        public GameState(byte capturedPieceType, int enPassantFile, int castlingRights, int fiftyMoveCounter, ulong zobristKey)
+        public GameState(byte capturedPiece, int enPassantFile, int castlingRights, int fiftyMoveCounter, ulong zobristKey)
         {
-            this.capturedPieceType = capturedPieceType;
+            this.capturedPiece = capturedPiece;
             this.enPassantFile = enPassantFile;
             this.castlingRights = castlingRights;
             this.fiftyMoveCounter = fiftyMoveCounter;

@@ -10,21 +10,7 @@ namespace Axiom
     {
         static void Main()
         {
-            UCI uci = new();
-
-            string? message = Console.ReadLine(); ;
-            while (message != "quit")
-            {
-               
-                if (message == null)
-                {
-                    Console.WriteLine("Unknown message");
-                    continue;
-                }
-
-                uci.ReciveCommand(message);
-                message = Console.ReadLine();
-            }
+            Perft.RunSuite(5);
         }
     }
 }

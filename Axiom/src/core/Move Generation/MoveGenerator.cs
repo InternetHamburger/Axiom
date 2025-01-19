@@ -273,7 +273,7 @@ namespace Axiom.src.core.Move_Generation
                 }
 
                 // Capture right
-                pawnMoves = (pawns & MoveGenConstants.WhitePawnCaptureRightMask & MoveGenConstants.BlackPromotionMask) << 7;
+                pawnMoves = (pawns & MoveGenConstants.BlackPawnCaptureRightMask & MoveGenConstants.BlackPromotionMask) << 7;
                 pawnMoves &= board.WhitePieceBitBoard;
 
                 while (pawnMoves != 0)

@@ -6,3 +6,5 @@ TODO:
 
 IDEAS:
 - Speed up checking for check with ray masks
+- Speed up pawn move gen
+	- Generate single pushes and then filter for double pushes

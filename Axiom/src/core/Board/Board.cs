@@ -54,14 +54,45 @@ namespace Axiom.src.core.Board
             Squares[startSquare] = Piece.None; // A move always leaves an empty square
 
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
-            BitBoards[capturedPiece] ^= 1UL << targetSquare;
-
-            
-
 
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
+                if (WhiteToMove)
+                {
+                    castlingRights &= GameState.ClearWhiteKingsideMask;
+                    castlingRights &= GameState.ClearWhiteQueensideMask;
+                }
+                else
+                {
+                    castlingRights &= GameState.ClearBlackKingsideMask;
+                    castlingRights &= GameState.ClearBlackQueensideMask;
+                }
                 KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
+            }
+
+            // Remove castling rights
+            if (startSquare == 63 || targetSquare == 63) // h1
+            {
+                castlingRights &= GameState.ClearWhiteKingsideMask;
+            }
+            if (startSquare == 56 || targetSquare == 56) // a1
+            { 
+                castlingRights &= GameState.ClearWhiteQueensideMask;
+            }
+            if (startSquare == 7 || targetSquare == 7) // h8
+            { 
+                castlingRights &= GameState.ClearBlackKingsideMask;
+            }
+            if (startSquare == 0 || targetSquare == 0) // a8
+            {
+                castlingRights &= GameState.ClearBlackQueensideMask;
+            }
+
+
+            // Move is a capture
+            if (capturedPiece != Piece.None)
+            {
+                BitBoards[capturedPiece] ^= 1UL << targetSquare;
             }
 
             if (move.IsDoublePawnPush)
@@ -70,46 +101,48 @@ namespace Axiom.src.core.Board
             }
             else if (move.IsPromotion)
             {
-                Squares[targetSquare] = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
-                BitBoards[Squares[targetSquare]] |= 1UL << targetSquare;
+                byte promotionPiece = (byte)(move.PromotionPieceType | (WhiteToMove ? Piece.White : Piece.Black));
                 BitBoards[movedPiece] ^= 1UL << targetSquare;
+                BitBoards[promotionPiece] ^= 1UL << targetSquare;
+                Squares[targetSquare] = promotionPiece;
             }
-            //else if (move.IsEnPassantCapture)
-            //{
-            //    int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
-            //    Squares[enPassantCaptureSquare] = Piece.None;
-            //    BitBoards[WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn] ^= 1UL << enPassantCaptureSquare;
-            //}
-            //else if (move.MoveFlag == Move.CastleFlag)
-            //{
-            //    switch (targetSquare)
-            //    {
-            //        case 62: // white short castle (g1)
-            //            Squares[61] = Squares[63];
-            //            Squares[63] = Piece.None;
-            //            BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
-            //            castlingRights &= GameState.ClearWhiteKingsideMask;
-            //            break;
-            //        case 58: // white loing castle (c1)
-            //            Squares[59] = Squares[56];
-            //            Squares[56] = Piece.None;
-            //            BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
-            //            castlingRights &= GameState.ClearWhiteQueensideMask;
-            //            break;
-            //        case 6: // black short castle (g8)
-            //            Squares[5] = Squares[7];
-            //            Squares[7] = Piece.None;
-            //            BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
-            //            castlingRights &= GameState.ClearBlackKingsideMask;
-            //            break;
-            //        case 2: // black long castle (c8)
-            //            Squares[3] = Squares[0];
-            //            Squares[0] = Piece.None;
-            //            BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
-            //            castlingRights &= GameState.ClearBlackQueensideMask;
-            //            break;
-            //    }
-            //}
+            else if (move.IsEnPassantCapture)
+            {
+                int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
+                byte capturedPawn = WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn;
+                Squares[enPassantCaptureSquare] = Piece.None;
+                BitBoards[capturedPawn] ^= 1UL << enPassantCaptureSquare;
+            }
+            else if (move.MoveFlag == Move.CastleFlag)
+            {
+                switch (targetSquare)
+                {
+                    case 62: // white short castle (g1)
+                        Squares[61] = Squares[63];
+                        Squares[63] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
+                        castlingRights &= GameState.ClearWhiteKingsideMask;
+                        break;
+                    case 58: // white loing castle (c1)
+                        Squares[59] = Squares[56];
+                        Squares[56] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
+                        castlingRights &= GameState.ClearWhiteQueensideMask;
+                        break;
+                    case 6: // black short castle (g8)
+                        Squares[5] = Squares[7];
+                        Squares[7] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
+                        castlingRights &= GameState.ClearBlackKingsideMask;
+                        break;
+                    case 2: // black long castle (c8)
+                        Squares[3] = Squares[0];
+                        Squares[0] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
+                        castlingRights &= GameState.ClearBlackQueensideMask;
+                        break;
+                }
+            }
 
             GameState newGameState = new(capturedPiece, newEnpassantFile, castlingRights, 0, 0);
             CurrentGameState = newGameState;
@@ -124,81 +157,99 @@ namespace Axiom.src.core.Board
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
 
-            byte movedPiece = Squares[targetSquare];
-            byte capturedPiece = CurrentGameState.capturedPieceType;
+            byte movedPiece = Squares[targetSquare]; // The promoted piece in case of promotion
+            byte capturedPiece = CurrentGameState.capturedPiece;
 
             Squares[startSquare] = movedPiece;
             Squares[targetSquare] = capturedPiece;
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
-            BitBoards[capturedPiece] ^= 1UL << targetSquare;
 
+
+            if (capturedPiece != Piece.None)
+            {
+                BitBoards[capturedPiece] |= 1UL << targetSquare;
+            }
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
-                KingSquares[WhiteToMove ? 0 : 1] = targetSquare;
+                KingSquares[WhiteToMove ? 0 : 1] = startSquare;
             }
-
             if (move.IsPromotion)
             {
-                Squares[startSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.White : Piece.Black));
+                byte movedPawn = (byte)(Piece.Pawn | (WhiteToMove ? Piece.White : Piece.Black));
+                Squares[startSquare] = movedPawn;
                 BitBoards[movedPiece] ^= 1UL << startSquare;
+                BitBoards[movedPawn] ^= 1UL << startSquare;
             }
-            //else if (move.IsEnPassantCapture)
-            //{
-            //    int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
-            //    Squares[enPassantCaptureSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
-            //    BitBoards[Squares[enPassantCaptureSquare]] ^= 1UL << enPassantCaptureSquare;
-            //}
-            //else if (move.MoveFlag == Move.CastleFlag)
-            //{
-            //    switch (targetSquare)
-            //    {
-            //        case 62: // white short castle (g1)
-            //            Squares[63] = Squares[61];
-            //            Squares[61] = Piece.None;
-            //            BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
-            //            break;
-            //        case 58: // white loing castle (c1)
-            //            Squares[56] = Squares[59];
-            //            Squares[59] = Piece.None;
-            //            BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
-            //            break;
-            //        case 6: // black short castle (g8)
-            //            Squares[7] = Squares[5];
-            //            Squares[5] = Piece.None;
-            //            BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
-            //            break;
-            //        case 2: // black long castle (c8)
-            //            Squares[0] = Squares[3];
-            //            Squares[3] = Piece.None;
-            //            BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
-            //            break;
-            //    }
-            //}
+            else if (move.IsEnPassantCapture)
+            {
+                int enPassantCaptureSquare = targetSquare + (WhiteToMove ? 8 : -8);
+                Squares[enPassantCaptureSquare] = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
+                BitBoards[Squares[enPassantCaptureSquare]] ^= 1UL << enPassantCaptureSquare;
+            }
+            else if (move.MoveFlag == Move.CastleFlag)
+            {
+                switch (targetSquare)
+                {
+                    case 62: // white short castle (g1)
+                        Squares[63] = Squares[61];
+                        Squares[61] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
+                        break;
+                    case 58: // white loing castle (c1)
+                        Squares[56] = Squares[59];
+                        Squares[59] = Piece.None;
+                        BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
+                        break;
+                    case 6: // black short castle (g8)
+                        Squares[7] = Squares[5];
+                        Squares[5] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
+                        break;
+                    case 2: // black long castle (c8)
+                        Squares[0] = Squares[3];
+                        Squares[3] = Piece.None;
+                        BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
+                        break;
+                }
+            }
 
-            CurrentGameState = GameHistory.Pop();
+            GameHistory.Pop();
+            CurrentGameState = GameHistory.Peek();
         }
 
-        public bool IsInCheck()
+        public bool IsInCheck(bool IsWhite)
         {
-            int square = KingSquares[WhiteToMove ? 0 : 1];
+            int square = KingSquares[IsWhite ? 0 : 1];
 
-            ulong king = 1Ul << square;
+            return IsUnderAttack(square, IsWhite);
+        }
 
-            if (WhiteToMove)
+
+        public bool IsUnderAttack(int square, bool IsWhite)
+        {
+
+            IsWhite = !IsWhite;
+            ulong bitboard = 1Ul << square;
+
+            if (IsWhite)
             {
-                if ((((king & MoveGenConstants.BlackPawnCaptureLeftMask) >> 7 | ((king & MoveGenConstants.BlackPawnCaptureRightMask) >> 9)) & BitBoards[Piece.BlackPawn]) != 0)
+                if ((((bitboard & MoveGenConstants.WhitePawnCaptureLeftMask) << 7 | ((bitboard & MoveGenConstants.WhitePawnCaptureRightMask) << 9)) & BitBoards[Piece.WhitePawn]) != 0)
                 {
                     return true;
                 }
             }
             else
             {
-                if ((((king & MoveGenConstants.WhitePawnCaptureLeftMask) << 7 | ((king & MoveGenConstants.WhitePawnCaptureRightMask) << 9)) & BitBoards[Piece.WhitePawn]) != 0)
+                if ((((bitboard & MoveGenConstants.BlackPawnCaptureLeftMask) >> 7 | ((bitboard & MoveGenConstants.BlackPawnCaptureRightMask) >> 9)) & BitBoards[Piece.BlackPawn]) != 0)
                 {
                     return true;
                 }
             }
-            if ((PreComputedMoveData.KnightAttacks[square] & BitBoards[WhiteToMove ? Piece.BlackKnight : Piece.WhiteKnight]) != 0)
+            if ((PreComputedMoveData.KnightAttacks[square] & BitBoards[IsWhite ? Piece.WhiteKnight : Piece.BlackKnight]) != 0)
+            {
+                return true;
+            }
+            else if ((PreComputedMoveData.KingAttacks[square] & BitBoards[IsWhite ? Piece.WhiteKing : Piece.BlackKing]) != 0)
             {
                 return true;
             }
@@ -212,13 +263,13 @@ namespace Axiom.src.core.Board
                     byte pieceOnTargetSquare = Squares[targetSquare];
 
                     // Blocked by friendly piece
-                    if (Piece.IsColour(pieceOnTargetSquare, WhiteToMove ? 0 : 8))
+                    if (Piece.IsColour(pieceOnTargetSquare, IsWhite ? 8 : 0))
                     {
                         break;
                     }
 
                     // Blocked by enemy piece
-                    if (Piece.IsColour(pieceOnTargetSquare, WhiteToMove ? 8 : 0))
+                    if (Piece.IsColour(pieceOnTargetSquare, IsWhite ? 0 : 8))
                     {
                         if (Piece.IsDiagonalSlider(pieceOnTargetSquare) && directionIndex > 3)
                         {
@@ -274,6 +325,8 @@ namespace Axiom.src.core.Board
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
             GameHistory.Push(CurrentGameState);
         }
+
+        public string Fen => FenUtility.GetFen(this);
 
 
 

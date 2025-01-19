@@ -86,9 +86,11 @@ namespace Axiom.src.core.Utility
 
 
                 fullCastlingRights = (whiteCastleKingside ? 1 : 0)
-                                   | (whiteCastleQueenside ? 4 : 0)
-                                   | (blackCastleKingside ? 8 : 0)
-                                   | (blackCastleQueenside ? 16 : 0);
+                                   | (whiteCastleQueenside ? 2 : 0)
+                                   | (blackCastleKingside ? 4 : 0)
+                                   | (blackCastleQueenside ? 8 : 0);
+
+
 
                 // Default values
                 epFile = -1;
@@ -115,6 +117,80 @@ namespace Axiom.src.core.Utility
                     int.TryParse(sections[5], out moveCount);
                 }
             }
+        }
+
+        public static string GetFen(Board.Board board)
+        {
+            string CastlingRights = "";
+            string Position = "";
+            string EnPassantSquare;
+            string SideToMove;
+
+
+            // Castling
+            bool whiteKingside = (board.CurrentGameState.castlingRights & 1) == 1;
+            bool whiteQueenside = ((board.CurrentGameState.castlingRights >> 1) & 1) == 1;
+            bool blackKingside = (board.CurrentGameState.castlingRights >> 2 & 1) == 1;
+            bool blackQueenside = (board.CurrentGameState.castlingRights >> 3 & 1) == 1;
+
+            CastlingRights += (whiteKingside) ? "K" : "";
+            CastlingRights += (whiteQueenside) ? "Q" : "";
+            CastlingRights += (blackKingside) ? "k" : "";
+            CastlingRights += (blackQueenside) ? "q" : "";
+            CastlingRights += ((board.CurrentGameState.castlingRights) == 0) ? "-" : "";
+
+
+            SideToMove = board.WhiteToMove ? "w" : "b";
+
+
+            EnPassantSquare = "-";
+            
+
+            int absIndex = 0;
+            int addIndex = 0;
+            bool hasSeenPiece = false;
+            for (int rank = 0; rank < 8; rank++)
+            {
+                addIndex = 0;
+                for (int file = 0; file < 8; file++)
+                {
+                    if (board.Squares[absIndex] != 0)
+                    {
+
+                        if (addIndex != 0)
+                        {
+                            Position += addIndex.ToString();
+                        }
+
+                        hasSeenPiece = true;
+                        Position += Piece.GetSymbol(board.Squares[absIndex]);
+                        addIndex = 0;
+                    }
+                    else
+                    {
+                        addIndex++;
+                    }
+                    absIndex++;
+                    if (file == 7)
+                    {
+                        if (!hasSeenPiece)
+                        {
+                            Position += "8";
+                        }
+                        else if (addIndex != 0)
+                        {
+                            Position += addIndex.ToString();
+                        }
+                    }
+
+                }
+                hasSeenPiece = false;
+                if (rank != 7)
+                {
+                    Position += "/";
+                }
+            }
+            return Position + " " + SideToMove + " " + CastlingRights + " " + EnPassantSquare + " 0 1";
         }
     }
 }
