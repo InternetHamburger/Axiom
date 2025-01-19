@@ -100,14 +100,19 @@ namespace Axiom.src.core.Perft
 
             if (depth == 0)
             {
-                Console.WriteLine("Nodes searched: " + 1);
+                Console.WriteLine("Nodes searched: 1");
                 return;
             }
 
+            var watch = new Stopwatch();
+            watch.Start();
+
             Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
+
 
             ulong totalNodes = 0;
             ulong nodes = 0;
+
             foreach (Move move in moves)
             {
                 if (move.MoveFlag == Move.CastleFlag)
@@ -143,7 +148,11 @@ namespace Axiom.src.core.Perft
                 totalNodes += nodes;
                 Console.WriteLine($"{BoardUtility.MoveToUci(move)}: {nodes}");
             }
+
+            watch.Stop();
             Console.WriteLine("\nNodes searched: " + totalNodes);
+            Console.WriteLine($"Time: {watch.ElapsedMilliseconds}");
+            Console.WriteLine($"Knps: {totalNodes / (ulong)Math.Max(1, watch.ElapsedMilliseconds)}");
         }
 
         public static ulong SearchNoBulk(Board.Board board, int depth)

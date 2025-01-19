@@ -6,5 +6,6 @@ TODO:
 
 IDEAS:
 - Speed up checking for check with ray masks
+	- Differenciate between diagonal and orthogonal sliders
 - Speed up pawn move gen
 	- Generate single pushes and then filter for double pushes

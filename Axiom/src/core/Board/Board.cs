@@ -254,8 +254,25 @@ namespace Axiom.src.core.Board
                 return true;
             }
 
+            ulong enemySliders;
+            if (IsWhite)
+            {
+                enemySliders = BitBoards[Piece.WhiteBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.WhiteQueen];
+            }
+            else
+            {
+                enemySliders = BitBoards[Piece.BlackBishop] | BitBoards[Piece.BlackRook] | BitBoards[Piece.BlackQueen];
+            }
+
+
             for (int directionIndex = 0; directionIndex < 8; directionIndex++)
             {
+
+                if ((MoveGenConstants.RayMasks[square, directionIndex] & enemySliders) == 0)
+                {
+                    continue;
+                }
+
                 for (int n = 0; n < MoveGenConstants.numSquaresToEdge[square, directionIndex]; n++)
                 {
 
