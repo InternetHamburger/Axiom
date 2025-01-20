@@ -310,12 +310,12 @@ namespace Axiom.src.core.Board
         public void SetPosition(string fen)
         {
             FenUtility.PositionInfo pos = new(fen);
-            Init();
             SetPosition(pos);
         }
 
         public void SetPosition(FenUtility.PositionInfo pos)
         {
+            Init();
             WhiteToMove = pos.whiteToMove;
 
 

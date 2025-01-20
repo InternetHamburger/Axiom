@@ -45,24 +45,24 @@ namespace Axiom.src.core.Board
 
 
         // Returns true if given piece matches the given colour. If piece is of type 'none', result will always be false.
-        public static bool IsColour(int piece, int color) => (piece & ColorMask) == color && piece != 0;
+        public static bool IsColour(byte piece, int color) => (piece & ColorMask) == color && piece != 0;
 
-        public static bool IsWhite(int piece) => IsColour(piece, White);
+        public static bool IsWhite(byte piece) => IsColour(piece, White);
 
-        public static int PieceType(int piece) => piece & PieceTypeMask;
+        public static byte PieceType(byte piece) => (byte)(piece & PieceTypeMask);
 
         // Rook or Queen
-        public static bool IsOrthogonalSlider(int piece) => PieceType(piece) is Queen or Rook;
+        public static bool IsOrthogonalSlider(byte piece) => PieceType(piece) is Queen or Rook;
 
         // Bishop or Queen
-        public static bool IsDiagonalSlider(int piece) => PieceType(piece) is Queen or Bishop;
+        public static bool IsDiagonalSlider(byte piece) => PieceType(piece) is Queen or Bishop;
 
         // Bishop, Rook, or Queen
-        public static bool IsSlidingPiece(int piece) => PieceType(piece) is Queen or Bishop or Rook;
+        public static bool IsSlidingPiece(byte piece) => PieceType(piece) is Queen or Bishop or Rook;
 
-        public static char GetSymbol(int piece)
+        public static char GetSymbol(byte piece)
         {
-            int pieceType = PieceType(piece);
+            byte pieceType = PieceType(piece);
             char symbol = pieceType switch
             {
                 Rook => 'R',

@@ -1,12 +1,6 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Perft;
 using Axiom.src.core.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Axiom.src
 {
@@ -41,7 +35,6 @@ namespace Axiom.src
                     Console.WriteLine();
                     BoardUtility.PrintBoard(board);
                     Console.WriteLine("\nFen: " + FenUtility.GetFen(board));
-
                     break;
                 default:
                     Console.WriteLine("Unknown message");
@@ -56,22 +49,39 @@ namespace Axiom.src
 
         private void HandlePositionCommand(string input)
         {
+            
             string[] tokens = input.Split(' ');
-            string fen = "";
+            string fen = tokens[1] == "startpos" ? BoardUtility.StartPos : "";
 
-            for (int i = 2; i < 7; i++)
+            if (tokens[1] != "startpos")
             {
-                if (tokens[i] == "moves")
+                for (int i = 2; i < Math.Min(7, tokens.Length - 1); i++)
                 {
-                    break;
-                }
-                else
-                {
-                    fen += tokens[i] + " ";
+                    if (tokens[i] == "moves")
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        fen += tokens[i] + " ";
+                    }
                 }
             }
-
+            
             board.SetPosition(fen);
+
+            int movesPos = Array.IndexOf(tokens, "moves");
+
+            if (movesPos != -1)
+            {
+                for (int i = movesPos + 1; i < tokens.Length; i++)
+                {
+                    string uciMove = tokens[i];
+                    Move move = ReturnMove(board, uciMove);
+
+                    board.MakeMove(move);
+                }
+            }
         }
 
         private void HandleGoCommand(string input)
@@ -79,6 +89,70 @@ namespace Axiom.src
             int depth = int.Parse(input.Split(' ')[2]);
 
             Perft.PerftSearch(board, depth);
+        }
+
+        public static Move ReturnMove(Board board, string move)
+        {
+            
+            int startSquare = BoardUtility.NameOfSquare(move.Substring(0, 2));
+            int targetSquare = BoardUtility.NameOfSquare(move.Substring(2, 2));
+            int promotionRank = board.WhiteToMove ? 1 : 6; // Rank for promotion
+            byte piece = board.Squares[startSquare];
+
+            int MoveFlag = Move.NoFlag;
+
+
+            if (Piece.PieceType(piece) == Piece.Pawn)
+            {
+                if (BoardUtility.File(startSquare) != BoardUtility.File(targetSquare))
+                {
+                    if (board.Squares[targetSquare] == 0)
+                    {
+                        MoveFlag = Move.EnPassantCaptureFlag;
+                    }
+                }
+                if (Math.Abs(BoardUtility.Rank(startSquare) - BoardUtility.Rank(targetSquare)) == 2)
+                {
+                    MoveFlag = Move.PawnTwoUpFlag;
+                }
+                if (BoardUtility.Rank(startSquare) == promotionRank)
+                {
+                    byte? promotionPieceType = Piece.GetType(move[4]) ?? throw new NotImplementedException();
+                    promotionPieceType = (byte)promotionPieceType;
+
+                    byte pievce = promotionPieceType.Value;
+
+                    switch (Piece.PieceType(pievce))
+                    {
+                        case Piece.Queen:
+                            MoveFlag = Move.PromoteToQueenFlag;
+                            break;
+                        case Piece.Rook:
+                            MoveFlag = Move.PromoteToRookFlag;
+                            break;
+                        case Piece.Knight:
+                            MoveFlag = Move.PromoteToKnightFlag;
+                            break;
+                        case Piece.Bishop:
+                            MoveFlag = Move.PromoteToBishopFlag;
+                            break;
+
+                    }
+                }
+
+            }
+            else if (Piece.PieceType(piece) == Piece.King)
+            {
+                if ((startSquare == 60 && (targetSquare == 62 || targetSquare == 58)) ||
+                    (startSquare == 4 && (targetSquare == 6 || targetSquare == 2)))
+                {
+                    MoveFlag = Move.CastleFlag;
+                }
+
+            }
+
+            return new Move(startSquare, targetSquare, MoveFlag);
+
         }
     }
 }

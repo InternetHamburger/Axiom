@@ -9,7 +9,7 @@ namespace Axiom.src.core.Perft
     static class Perft
     {
 
-        public const string perftSuitePath = @"C:\Users\Sindr\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
+        public const string perftSuitePath = @"C:\Users\Sindre Wolden\Source\Repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
 
         public static void RunSuite(int maxDepth = 6)
         {
