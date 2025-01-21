@@ -1,6 +1,8 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Perft;
+using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
+using System.Collections.Immutable;
 
 namespace Axiom.src
 {
@@ -8,10 +10,12 @@ namespace Axiom.src
     {
 
         private Board board;
+        private Engine engine;
 
         public UCI()
         {
             board = new Board();
+            engine = new Engine();
         }
 
         public void ReciveCommand(string input)
@@ -34,14 +38,14 @@ namespace Axiom.src
                 case "d":
                     Console.WriteLine();
                     BoardUtility.PrintBoard(board);
-                    Console.WriteLine("\nFen: " + FenUtility.GetFen(board));
+                    Console.WriteLine("\nFen: " + board.Fen);
                     break;
                 default:
                     Console.WriteLine("Unknown message");
                     break;
             }
         }
-        private void RespondUCI()
+        private static void RespondUCI()
         {
             Console.WriteLine("id name Axiom");
             Console.WriteLine("uciok");
@@ -86,9 +90,24 @@ namespace Axiom.src
 
         private void HandleGoCommand(string input)
         {
-            int depth = int.Parse(input.Split(' ')[2]);
+            int depth;
+            string[] tokens = input.Split(' ');
+            string type = tokens[1];
 
-            Perft.PerftSearch(board, depth);
+            switch (type)
+            {
+                case "perft":
+                    depth = int.Parse(input.Split(' ')[2]);
+
+                    Perft.PerftSearch(board, depth);
+                    break;
+                default:
+
+                    depth = int.Parse(tokens[Array.IndexOf(tokens, "depth") + 1]);
+
+                    engine.Search(depth);
+                    break;
+            }            
         }
 
         public static Move ReturnMove(Board board, string move)

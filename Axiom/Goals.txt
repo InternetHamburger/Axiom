@@ -1,7 +1,5 @@
 TODO:
-- Fix castle bug
-- Check for illegal castling in search
-
+- Add depth search to uci
 
 
 IDEAS:

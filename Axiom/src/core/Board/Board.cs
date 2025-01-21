@@ -345,8 +345,6 @@ namespace Axiom.src.core.Board
 
         public string Fen => FenUtility.GetFen(this);
 
-
-
         public ulong AllPieceBitBoard => BitBoards[Piece.WhitePawn] | BitBoards[Piece.BlackPawn] | BitBoards[Piece.WhiteKnight] | BitBoards[Piece.BlackKnight] | BitBoards[Piece.WhiteBishop] | BitBoards[Piece.BlackBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.BlackRook] | BitBoards[Piece.WhiteQueen] | BitBoards[Piece.BlackQueen] | BitBoards[Piece.WhiteKing] | BitBoards[Piece.BlackKing];
         public ulong WhitePieceBitBoard => BitBoards[Piece.WhitePawn] | BitBoards[Piece.WhiteKnight] | BitBoards[Piece.WhiteBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.WhiteQueen] | BitBoards[Piece.WhiteKing];
         public ulong BlackPieceBitBoard => BitBoards[Piece.BlackPawn] | BitBoards[Piece.BlackKnight] | BitBoards[Piece.BlackBishop] | BitBoards[Piece.BlackRook] | BitBoards[Piece.BlackQueen] | BitBoards[Piece.BlackKing];

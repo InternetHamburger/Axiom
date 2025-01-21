@@ -8,19 +8,21 @@ namespace Axiom
         {
             UCI uci = new();
 
-            string? message = Console.ReadLine();
+            string? message = "go depth 6";//Console.ReadLine();
 
-            while (message != "quit")
-            {
-                if (message == null)
-                {
-                    Console.WriteLine("Unknown command");
-                    continue;
-                }
+            uci.ReciveCommand(message);
 
-                uci.ReciveCommand(message);
-                message = Console.ReadLine();
-            }
+            //while (message != "quit")
+            //{
+            //    if (message == null)
+            //    {
+            //        Console.WriteLine("Unknown command");
+            //        continue;
+            //    }
+
+            //    uci.ReciveCommand(message);
+            //    message = Console.ReadLine();
+            //}
         }
     }
 }
