@@ -9,12 +9,10 @@ namespace Axiom.src
     public class UCI
     {
 
-        private Board board;
         private Engine engine;
 
         public UCI()
         {
-            board = new Board();
             engine = new Engine();
         }
 
@@ -37,8 +35,8 @@ namespace Axiom.src
                     break;
                 case "d":
                     Console.WriteLine();
-                    BoardUtility.PrintBoard(board);
-                    Console.WriteLine("\nFen: " + board.Fen);
+                    BoardUtility.PrintBoard(engine.board);
+                    Console.WriteLine("\nFen: " + engine.board.Fen);
                     break;
                 default:
                     Console.WriteLine("Unknown message");
@@ -59,7 +57,7 @@ namespace Axiom.src
 
             if (tokens[1] != "startpos")
             {
-                for (int i = 2; i < Math.Min(7, tokens.Length - 1); i++)
+                for (int i = 2; i < Math.Min(7, tokens.Length + 1); i++)
                 {
                     if (tokens[i] == "moves")
                     {
@@ -71,8 +69,7 @@ namespace Axiom.src
                     }
                 }
             }
-            
-            board.SetPosition(fen);
+            engine.SetPosition(fen);
 
             int movesPos = Array.IndexOf(tokens, "moves");
 
@@ -81,9 +78,8 @@ namespace Axiom.src
                 for (int i = movesPos + 1; i < tokens.Length; i++)
                 {
                     string uciMove = tokens[i];
-                    Move move = ReturnMove(board, uciMove);
-
-                    board.MakeMove(move);
+                    Move move = ReturnMove(engine.board, uciMove);
+                    engine.board.MakeMove(move);
                 }
             }
         }
@@ -99,20 +95,32 @@ namespace Axiom.src
                 case "perft":
                     depth = int.Parse(input.Split(' ')[2]);
 
-                    Perft.PerftSearch(board, depth);
+                    Perft.PerftSearch(engine.board, depth);
                     break;
                 default:
+                    int searchTime = ExtractMoveTime(tokens);
+                    depth = 256;
+                    if (tokens.Contains("depth"))
+                    {
+                        depth = int.Parse(tokens[Array.IndexOf(tokens, "depth") + 1]);
+                    }
+                    
 
-                    depth = int.Parse(tokens[Array.IndexOf(tokens, "depth") + 1]);
+                    engine.Search(depth, searchTime);
 
-                    engine.Search(depth);
+                    Console.WriteLine("bestmove " + BoardUtility.MoveToUci(engine.bestMove));
                     break;
-            }            
+            }
+        }
+
+        public static int GetSearchTime(int timeLeftMs, int incrementMs)
+        {
+            return (timeLeftMs / 60 + incrementMs / 2);
         }
 
         public static Move ReturnMove(Board board, string move)
         {
-            
+            Console.WriteLine(move);
             int startSquare = BoardUtility.NameOfSquare(move.Substring(0, 2));
             int targetSquare = BoardUtility.NameOfSquare(move.Substring(2, 2));
             int promotionRank = board.WhiteToMove ? 1 : 6; // Rank for promotion
@@ -172,6 +180,43 @@ namespace Axiom.src
 
             return new Move(startSquare, targetSquare, MoveFlag);
 
+        }
+
+        private int ExtractMoveTime(string[] tokens)
+        {
+            int timeLeft = int.MaxValue;
+            int increment = 0;
+            if (tokens.Contains("movetime"))
+            {
+                return int.Parse(tokens[Array.IndexOf(tokens, "movetime") + 1]);
+            }
+            if (engine.board.WhiteToMove)
+            {
+                if (tokens.Contains("wtime"))
+                {
+                    timeLeft = int.Parse(tokens[Array.IndexOf(tokens, "wtime") + 1]);
+                }
+
+                if (tokens.Contains("winc"))
+                {
+                    increment = int.Parse(tokens[Array.IndexOf(tokens, "winc") + 1]);
+                }
+            }
+            else
+            {
+                if (tokens.Contains("btime"))
+                {
+                    timeLeft = int.Parse(tokens[Array.IndexOf(tokens, "btime") + 1]);
+                }
+
+                if (tokens.Contains("binc"))
+                {
+                    increment = int.Parse(tokens[Array.IndexOf(tokens, "binc") + 1]);
+                }
+            }
+            
+            
+            return GetSearchTime(timeLeft, increment);
         }
     }
 }

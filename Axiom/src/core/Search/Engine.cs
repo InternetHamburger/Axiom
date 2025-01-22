@@ -1,6 +1,7 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
+using Axiom.src.core.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,36 +20,66 @@ namespace Axiom.src.core.Search
 
 
         public int SearchedNodes;
+        public Move bestMove;
+        public Move currentBestMove;
+
+        public double startTime;
+        public double timeLimit;
 
 
-        readonly Board.Board board;
+
+        public Board.Board board;
 
         public Engine()
         {
             board = new Board.Board();
 
-            NegaMax(1);
+            NegaMax(1, 0);
+        }
+
+        public void SetPosition(string fen)
+        {
+            board = new Board.Board(fen);
+            InitSearch();
         }
 
         public void Search(int depthlimit, int timelimit = int.MaxValue)
         {
             InitSearch();
+            this.timeLimit = timelimit;
             var watch = new Stopwatch();
             watch.Start();
-            Console.WriteLine(NegaMax(depthlimit));
+
+            for (int depth = 1; depth <= depthlimit; depth++)
+            {
+                NegaMax(depth, 0);
+                if (IsTimeUp)
+                {
+                    return;
+                }
+                bestMove = currentBestMove;
+                Console.WriteLine($"info string currmove {BoardUtility.MoveToUci(bestMove)} depth {depth} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds}");
+            }
+            
+          
             watch.Stop();
-            Console.WriteLine(SearchedNodes);
-            Console.WriteLine(SearchedNodes / watch.ElapsedMilliseconds * 1000);
         }
 
         private void InitSearch()
         {
             SearchedNodes = 0;
+            startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            currentBestMove = Move.NullMove;
         }
 
 
-        private int NegaMax(int depth)
+        private int NegaMax(int depth, int plyFromRoot)
         {
+            if (IsTimeUp)
+            {
+                return 0;
+            }
+
             SearchedNodes++;
             if (depth <= 0)
             {
@@ -59,6 +90,7 @@ namespace Axiom.src.core.Search
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             int maxScore = NegativeInf;
+            int numLegalMoves = 0;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
@@ -97,19 +129,35 @@ namespace Axiom.src.core.Search
                     continue;
                 }
 
-                int score = -NegaMax(depth - 1);
+                numLegalMoves++;
+
+                int score = -NegaMax(depth - 1, plyFromRoot + 1);
 
                 board.UndoMove(move);
 
                 if (score > maxScore)
                 {
+                    if (plyFromRoot == 0)
+                    {
+                        currentBestMove = move;
+                    }
+
                     maxScore = score;
                 }
-                
+            }
 
+            if (numLegalMoves == 0)
+            {
+                if (board.IsInCheck(board.WhiteToMove))
+                {
+                    return NegativeInf; // Checkmate
+                }
+                return 0; // Stalemate
             }
 
             return maxScore;
         }
+
+        bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;
     }
 }
