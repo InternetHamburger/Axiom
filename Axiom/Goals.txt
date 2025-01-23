@@ -7,3 +7,4 @@ IDEAS:
 	- Differenciate between diagonal and orthogonal sliders
 - Speed up pawn move gen
 	- Generate single pushes and then filter for double pushes
+- Try a different prng for zobrist hashing
