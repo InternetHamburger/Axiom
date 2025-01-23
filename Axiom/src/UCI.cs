@@ -27,6 +27,9 @@ namespace Axiom.src
                 case "uci":
                     RespondUCI();
                     break;
+                case "isready":
+                    Console.WriteLine("readyok");
+                    break;
                 case "position":
                     HandlePositionCommand(input);
                     break;
