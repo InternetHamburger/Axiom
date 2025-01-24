@@ -142,10 +142,23 @@ namespace Axiom.src.core.Utility
 
             SideToMove = board.WhiteToMove ? "w" : "b";
 
-
-            EnPassantSquare = "-";
+            if (board.CurrentGameState.enPassantFile != -1)
+            {
+                if (board.WhiteToMove)
+                {
+                    EnPassantSquare = BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + 8 * 2);
+                }
+                else
+                {
+                    EnPassantSquare = BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + 8 * 5);
+                }
+            }
+            else
+            {
+                EnPassantSquare = "-";
+            }
             
-
+            
             int absIndex = 0;
             int addIndex = 0;
             bool hasSeenPiece = false;

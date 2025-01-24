@@ -61,6 +61,13 @@ namespace Axiom.src.core.Board
 
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
 
+
+            // Remove legality for en passant
+            if (CurrentGameState.enPassantFile != -1)
+            {
+                ZobristHash ^= Zobrist.EnPassantFiles[CurrentGameState.enPassantFile];
+            }
+
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
                 if (WhiteToMove)
@@ -172,7 +179,7 @@ namespace Axiom.src.core.Board
             WhiteToMove = !WhiteToMove;
             GameHistory.Push(newGameState);
         }
-
+         
         public void UndoMove(Move move)
         { 
             WhiteToMove = !WhiteToMove;
@@ -234,10 +241,10 @@ namespace Axiom.src.core.Board
                         break;
                 }
             }
-
+            
             GameHistory.Pop();
             CurrentGameState = GameHistory.Peek();
-            ZobristHash = CurrentGameState.zobristKey;
+            ZobristHash = GameHistory.Peek().zobristKey;
         }
 
         public bool IsInCheck(bool IsWhite)
@@ -368,7 +375,7 @@ namespace Axiom.src.core.Board
             }
             ZobristHash ^= Zobrist.CastlingRights[pos.fullCastlingRights];
 
-            CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
+            CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, ZobristHash);
             GameHistory.Push(CurrentGameState);
         }
 

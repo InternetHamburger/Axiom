@@ -1,5 +1,6 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
+using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -9,7 +10,7 @@ namespace Axiom.src.core.Perft
     static class Perft
     {
 
-        public const string perftSuitePath = @"C:\Users\Sindre Wolden\Source\Repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
+        public const string perftSuitePath = @"C:\Users\Sindr\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
 
         public static void RunSuite(int maxDepth = 6)
         {
@@ -51,6 +52,7 @@ namespace Axiom.src.core.Perft
 
             total.Stop();
             Console.WriteLine("Total ms elpased: " + total.ElapsedMilliseconds);
+            Console.WriteLine("Total positions: " + totalPositions);
             Console.WriteLine("Knps: " + totalPositions / (ulong)total.ElapsedMilliseconds);
         }
 
@@ -126,7 +128,7 @@ namespace Axiom.src.core.Perft
                         case 62: // white short castle (g1)
                             if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) { continue; }
                             break;
-                        case 58: // white loing castle (c1)
+                        case 58: // white long castle (c1)
                             if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) { continue; }
                             break;
                         case 6: // black short castle (g8)
@@ -143,9 +145,11 @@ namespace Axiom.src.core.Perft
                     board.UndoMove(move);
                     continue;
                 }
+
                 nodes = SearchNoBulk(board, depth - 1);
                 board.UndoMove(move);
                 totalNodes += nodes;
+
                 Console.WriteLine($"{BoardUtility.MoveToUci(move)}: {nodes}");
             }
 
@@ -178,7 +182,7 @@ namespace Axiom.src.core.Perft
                         case 62: // white short castle (g1)
                             if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) { continue; }
                             break;
-                        case 58: // white loing castle (c1)
+                        case 58: // white long castle (c1)
                             if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) { continue; }
                             break;
                         case 6: // black short castle (g8)
@@ -190,7 +194,7 @@ namespace Axiom.src.core.Perft
                     }
                 }
                 board.MakeMove(move);
-                if (board.IsInCheck(!board.WhiteToMove)) 
+                if (board.IsInCheck(!board.WhiteToMove))
                 {
                     board.UndoMove(move);
                     continue;
