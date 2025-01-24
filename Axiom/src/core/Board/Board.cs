@@ -5,11 +5,14 @@ namespace Axiom.src.core.Board
 {
     public sealed class Board
     {
+        public const ulong InitialZobristSeed = 2576434379651712347;
+
         public GameState CurrentGameState;
         public bool WhiteToMove;
         public byte[] Squares;
         public ulong[] BitBoards;
         public int[] KingSquares;
+        public ulong ZobristHash;
 
         private Stack<GameState> GameHistory;
 
@@ -53,6 +56,9 @@ namespace Axiom.src.core.Board
             Squares[targetSquare] = movedPiece;
             Squares[startSquare] = Piece.None; // A move always leaves an empty square
 
+            ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, startSquare];
+            ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
+
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
 
             if (Piece.PieceType(movedPiece) == Piece.King)
@@ -93,11 +99,13 @@ namespace Axiom.src.core.Board
             if (capturedPiece != Piece.None)
             {
                 BitBoards[capturedPiece] ^= 1UL << targetSquare;
+                ZobristHash ^= Zobrist.ZobristPieceValues[capturedPiece, targetSquare];
             }
 
             if (move.IsDoublePawnPush)
             {
                 newEnpassantFile = BoardUtility.File(targetSquare);
+                ZobristHash ^= Zobrist.EnPassantFiles[newEnpassantFile];
             }
             else if (move.IsPromotion)
             {
@@ -105,6 +113,8 @@ namespace Axiom.src.core.Board
                 BitBoards[movedPiece] ^= 1UL << targetSquare;
                 BitBoards[promotionPiece] ^= 1UL << targetSquare;
                 Squares[targetSquare] = promotionPiece;
+                ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
+                ZobristHash ^= Zobrist.ZobristPieceValues[promotionPiece, targetSquare];
             }
             else if (move.IsEnPassantCapture)
             {
@@ -112,6 +122,7 @@ namespace Axiom.src.core.Board
                 byte capturedPawn = WhiteToMove ? Piece.BlackPawn : Piece.WhitePawn;
                 Squares[enPassantCaptureSquare] = Piece.None;
                 BitBoards[capturedPawn] ^= 1UL << enPassantCaptureSquare;
+                ZobristHash ^= Zobrist.ZobristPieceValues[capturedPawn, enPassantCaptureSquare];
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -122,29 +133,40 @@ namespace Axiom.src.core.Board
                         Squares[63] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
                         castlingRights &= GameState.ClearWhiteKingsideMask;
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 61];
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 63];
                         break;
                     case 58: // white loing castle (c1)
                         Squares[59] = Squares[56];
                         Squares[56] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
                         castlingRights &= GameState.ClearWhiteQueensideMask;
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 56];
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 59];
                         break;
                     case 6: // black short castle (g8)
                         Squares[5] = Squares[7];
                         Squares[7] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
                         castlingRights &= GameState.ClearBlackKingsideMask;
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 5];
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 7];
                         break;
                     case 2: // black long castle (c8)
                         Squares[3] = Squares[0];
                         Squares[0] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
                         castlingRights &= GameState.ClearBlackQueensideMask;
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 0];
+                        ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 3];
                         break;
                 }
             }
+            ZobristHash ^= Zobrist.CastlingRights[castlingRights];
+            ZobristHash ^= Zobrist.CastlingRights[GameHistory.Peek().castlingRights];
+            ZobristHash ^= Zobrist.WhiteToMove;
 
-            GameState newGameState = new(capturedPiece, newEnpassantFile, castlingRights, 0, 0);
+            GameState newGameState = new(capturedPiece, newEnpassantFile, castlingRights, 0, ZobristHash);
             CurrentGameState = newGameState;
 
             WhiteToMove = !WhiteToMove;
@@ -152,7 +174,7 @@ namespace Axiom.src.core.Board
         }
 
         public void UndoMove(Move move)
-        {
+        { 
             WhiteToMove = !WhiteToMove;
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
@@ -215,6 +237,7 @@ namespace Axiom.src.core.Board
 
             GameHistory.Pop();
             CurrentGameState = GameHistory.Peek();
+            ZobristHash = CurrentGameState.zobristKey;
         }
 
         public bool IsInCheck(bool IsWhite)
@@ -223,7 +246,6 @@ namespace Axiom.src.core.Board
 
             return IsUnderAttack(square, IsWhite);
         }
-
 
         public bool IsUnderAttack(int square, bool IsWhite)
         {
@@ -305,8 +327,6 @@ namespace Axiom.src.core.Board
             return false;
         }
 
-
-
         public void SetPosition(string fen)
         {
             FenUtility.PositionInfo pos = new(fen);
@@ -318,13 +338,17 @@ namespace Axiom.src.core.Board
             Init();
             WhiteToMove = pos.whiteToMove;
 
-
-
+            if (WhiteToMove)
+            {
+                ZobristHash ^= Zobrist.WhiteToMove;
+            }
+            
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
                 Squares[squareIndex] = pos.Squares[squareIndex];
 
                 BitBoards[Squares[squareIndex]] |= 1UL << squareIndex;
+                ZobristHash ^= Zobrist.ZobristPieceValues[Squares[squareIndex], squareIndex];
 
                 if (Piece.PieceType(Squares[squareIndex]) == Piece.King)
                 {
@@ -337,8 +361,13 @@ namespace Axiom.src.core.Board
                         KingSquares[1] = squareIndex;
                     }
                 }
-               
             }
+            if (pos.epFile != -1)
+            {
+                ZobristHash ^= Zobrist.EnPassantFiles[pos.epFile];
+            }
+            ZobristHash ^= Zobrist.CastlingRights[pos.fullCastlingRights];
+
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, 0);
             GameHistory.Push(CurrentGameState);
         }

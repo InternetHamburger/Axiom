@@ -17,11 +17,8 @@ namespace Axiom.src.core.Board
         }
 
         public static readonly ulong[,] ZobristPieceValues = new ulong[Piece.MaxPieceIndex + 1, 64];
+        public static readonly ulong[] CastlingRights = new ulong[16];
         public static readonly ulong[] EnPassantFiles = new ulong[8];
-        public static readonly ulong WhiteCastleShort;
-        public static readonly ulong WhiteCastleLong;
-        public static readonly ulong BlackCastleShort;
-        public static readonly ulong BlackCastleLong;
         public static readonly ulong WhiteToMove;
         
 
@@ -44,14 +41,14 @@ namespace Axiom.src.core.Board
                 ZobristPieceValues[Piece.BlackQueen, i] = PseudoRandomNumber(ref Seed);
                 ZobristPieceValues[Piece.BlackKing, i] = PseudoRandomNumber(ref Seed);
             }
+            for (int i = 0; i < 16; i++)
+            {
+                CastlingRights[i] = PseudoRandomNumber(ref Seed);
+            }
             for (int i = 0; i < 8; i++)
             {
                 EnPassantFiles[i] = PseudoRandomNumber(ref Seed);
             }
-            WhiteCastleShort = PseudoRandomNumber(ref Seed);
-            WhiteCastleLong = PseudoRandomNumber(ref Seed);
-            BlackCastleShort = PseudoRandomNumber(ref Seed);
-            BlackCastleLong = PseudoRandomNumber(ref Seed);
             WhiteToMove = PseudoRandomNumber(ref Seed);
         }
     }

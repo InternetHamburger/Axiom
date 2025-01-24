@@ -40,6 +40,7 @@ namespace Axiom.src
                     Console.WriteLine();
                     BoardUtility.PrintBoard(engine.board);
                     Console.WriteLine("\nFen: " + engine.board.Fen);
+                    Console.WriteLine("Hash: " + engine.board.ZobristHash);
                     break;
                 default:
                     Console.WriteLine("Unknown message");
@@ -123,7 +124,6 @@ namespace Axiom.src
 
         public static Move ReturnMove(Board board, string move)
         {
-            Console.WriteLine(move);
             int startSquare = BoardUtility.NameOfSquare(move.Substring(0, 2));
             int targetSquare = BoardUtility.NameOfSquare(move.Substring(2, 2));
             int promotionRank = board.WhiteToMove ? 1 : 6; // Rank for promotion
