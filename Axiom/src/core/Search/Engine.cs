@@ -86,6 +86,14 @@ namespace Axiom.src.core.Search
                 return Evaluator.Evaluate(board);
             }
 
+            // Not in root node
+            if (plyFromRoot > 0)
+            {
+                if (board.IsThreefoldRepetition())
+                {
+                    return 0;
+                }
+            }
 
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);

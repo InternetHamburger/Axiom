@@ -15,6 +15,7 @@ namespace Axiom.src.core.Board
         public ulong ZobristHash;
 
         private Stack<GameState> GameHistory;
+        private Stack<ulong> RepetitionHistory;
 
 
 
@@ -26,7 +27,8 @@ namespace Axiom.src.core.Board
             WhiteToMove = true;
 
             CurrentGameState = new GameState();
-            GameHistory = new Stack<GameState>();
+            GameHistory = new Stack<GameState>(256);
+            RepetitionHistory = new Stack<ulong>(256);
 
             SetPosition(fen);
         }
@@ -39,11 +41,13 @@ namespace Axiom.src.core.Board
             WhiteToMove = true;
 
             CurrentGameState = new GameState();
-            GameHistory = new Stack<GameState>();
+            GameHistory = new Stack<GameState>(256);
+            RepetitionHistory = new Stack<ulong>(256);
         }
 
         public void MakeMove(Move move)
         {
+            RepetitionHistory.Push(ZobristHash);
             int castlingRights = GameHistory.Peek().castlingRights;
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
@@ -244,7 +248,8 @@ namespace Axiom.src.core.Board
             
             GameHistory.Pop();
             CurrentGameState = GameHistory.Peek();
-            ZobristHash = GameHistory.Peek().zobristKey;
+            ZobristHash = CurrentGameState.zobristKey;
+            RepetitionHistory.Pop();
         }
 
         public bool IsInCheck(bool IsWhite)
@@ -378,6 +383,8 @@ namespace Axiom.src.core.Board
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, ZobristHash);
             GameHistory.Push(CurrentGameState);
         }
+
+        public bool IsThreefoldRepetition() => RepetitionHistory.Contains(ZobristHash);
 
         public string Fen => FenUtility.GetFen(this);
 
