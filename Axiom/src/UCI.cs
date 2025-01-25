@@ -42,6 +42,9 @@ namespace Axiom.src
                     Console.WriteLine("\nFen: " + engine.board.Fen);
                     Console.WriteLine("Hash: " + engine.board.ZobristHash);
                     break;
+                case "r":
+                    Console.WriteLine(BoardUtility.FlipSquare(63));
+                    break;
                 default:
                     Console.WriteLine("Unknown message");
                     break;

@@ -31,6 +31,13 @@ namespace Axiom.src.core.Utility
             return file + 8 * rank;
         }
 
+        public static int FlipSquare(int square)
+        {
+            int file = File(square);
+            int rank = 7 - Rank(square);
+            return file + rank * 8;
+        }
+
         public static string MoveToUci(Move move)
         {
             string startSqare = NameOfSquare(move.StartSquare);
