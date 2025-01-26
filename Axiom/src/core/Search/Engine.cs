@@ -2,13 +2,7 @@
 using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Formats.Tar;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Axiom.src.core.Search
 {
