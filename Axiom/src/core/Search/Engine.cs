@@ -5,6 +5,7 @@ using Axiom.src.core.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Formats.Tar;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace Axiom.src.core.Search
         public int SearchedNodes;
         public Move bestMove;
         public Move currentBestMove;
+        public int eval;
+        public int currentEval;
 
         public double startTime;
         public double timeLimit;
@@ -34,7 +37,7 @@ namespace Axiom.src.core.Search
         {
             board = new Board.Board();
 
-            NegaMax(1, 0);
+            NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
         public void SetPosition(string fen)
@@ -52,13 +55,14 @@ namespace Axiom.src.core.Search
 
             for (int depth = 1; depth <= depthlimit; depth++)
             {
-                NegaMax(depth, 0);
+                NegaMax(depth, 0, NegativeInf, PositiveInf);
                 if (IsTimeUp)
                 {
                     return;
                 }
                 bestMove = currentBestMove;
-                Console.WriteLine($"info string currmove {BoardUtility.MoveToUci(bestMove)} depth {depth} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds}");
+                eval = currentEval;
+                Console.WriteLine($"info depth {depth} score cp {eval} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMove)}");
             }
             
           
@@ -73,13 +77,8 @@ namespace Axiom.src.core.Search
         }
 
 
-        private int NegaMax(int depth, int plyFromRoot)
+        private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
-            if (IsTimeUp)
-            {
-                return 0;
-            }
-
             SearchedNodes++;
             if (depth <= 0)
             {
@@ -97,7 +96,6 @@ namespace Axiom.src.core.Search
 
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
-            int maxScore = NegativeInf;
             int numLegalMoves = 0;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
@@ -139,18 +137,28 @@ namespace Axiom.src.core.Search
 
                 numLegalMoves++;
 
-                int score = -NegaMax(depth - 1, plyFromRoot + 1);
+                int score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
 
                 board.UndoMove(move);
 
-                if (score > maxScore)
+                if (IsTimeUp)
+                {
+                    return 0;
+                }
+
+                if (score > alpha)
                 {
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
+                        currentEval = score;
                     }
+                    alpha = score;
+                }
 
-                    maxScore = score;
+                if (beta <= alpha)
+                {
+                    return beta; // Return beta on cutoff
                 }
             }
 
@@ -163,7 +171,60 @@ namespace Axiom.src.core.Search
                 return 0; // Stalemate
             }
 
-            return maxScore;
+            return alpha;
+        }
+
+        private int Quiecence(int alpha, int beta)
+        {
+            SearchedNodes++;
+            int standingPat = Evaluator.Evaluate(board);
+
+            if (standingPat >= beta)
+            {
+                return beta;
+            }
+
+            if (alpha < standingPat)
+            {
+                alpha = standingPat;
+            }
+
+            Move[] captureMoves = MoveGenerator.GetPseudoLegalCaptures(board);
+            MoveOrderer.OrderMoves(ref captureMoves, board);
+
+            if (IsTimeUp)
+            {
+                return standingPat;
+            }
+
+            foreach (Move move in captureMoves)
+            {
+                // No need to filter illegal castling moves
+                // as they are not generated in qSearch
+
+                board.MakeMove(move);
+
+                // Filter illegal moves
+                if (board.IsInCheck(!board.WhiteToMove))
+                {
+                    board.UndoMove(move);
+                    continue;
+                }
+
+                int score = -Quiecence(-beta, -alpha);
+                board.UndoMove(move);
+
+                if (score >= beta)
+                {
+                    return beta;
+                }
+                if (score > alpha)
+                {
+                    alpha = score;
+                }
+            }
+
+            return alpha;
         }
 
         bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;

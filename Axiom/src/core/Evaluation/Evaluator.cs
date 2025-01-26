@@ -187,7 +187,6 @@ namespace Axiom.src.core.Evaluation
             {
                 eval += MaterialValue(board.Squares[i], i);
             }
-
             return eval * (board.WhiteToMove ? 1 : -1);
         }
 
