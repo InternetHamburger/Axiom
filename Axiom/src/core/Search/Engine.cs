@@ -90,6 +90,7 @@ namespace Axiom.src.core.Search
 
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
+            MoveOrderer.OrderMoves(pseudoLegalMoves, board);
             int numLegalMoves = 0;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
@@ -184,7 +185,7 @@ namespace Axiom.src.core.Search
             }
 
             Move[] captureMoves = MoveGenerator.GetPseudoLegalCaptures(board);
-            MoveOrderer.OrderMoves(ref captureMoves, board);
+            MoveOrderer.OrderMoves(captureMoves, board);
 
             if (IsTimeUp)
             {

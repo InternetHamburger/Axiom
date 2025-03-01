@@ -15,7 +15,7 @@ namespace Axiom.src.core.Board
         public ulong ZobristHash;
 
         private Stack<GameState> GameHistory;
-        private Stack<ulong> RepetitionHistory;
+        private List<ulong> RepetitionHistory;
 
 
 
@@ -28,7 +28,7 @@ namespace Axiom.src.core.Board
 
             CurrentGameState = new GameState();
             GameHistory = new Stack<GameState>(256);
-            RepetitionHistory = new Stack<ulong>(256);
+            RepetitionHistory = new List<ulong>();
 
             SetPosition(fen);
         }
@@ -42,12 +42,12 @@ namespace Axiom.src.core.Board
 
             CurrentGameState = new GameState();
             GameHistory = new Stack<GameState>(256);
-            RepetitionHistory = new Stack<ulong>(256);
+            RepetitionHistory = new List<ulong>();
         }
 
         public void MakeMove(Move move)
         {
-            RepetitionHistory.Push(ZobristHash);
+            RepetitionHistory.Add(ZobristHash);
             int castlingRights = GameHistory.Peek().castlingRights;
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
@@ -183,9 +183,9 @@ namespace Axiom.src.core.Board
             WhiteToMove = !WhiteToMove;
             GameHistory.Push(newGameState);
         }
-         
+
         public void UndoMove(Move move)
-        { 
+        {
             WhiteToMove = !WhiteToMove;
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
@@ -245,11 +245,11 @@ namespace Axiom.src.core.Board
                         break;
                 }
             }
-            
+
             GameHistory.Pop();
             CurrentGameState = GameHistory.Peek();
             ZobristHash = CurrentGameState.zobristKey;
-            RepetitionHistory.Pop();
+            RepetitionHistory.RemoveAt(RepetitionHistory.Count - 1);
         }
 
         public bool IsInCheck(bool IsWhite)
@@ -384,7 +384,18 @@ namespace Axiom.src.core.Board
             GameHistory.Push(CurrentGameState);
         }
 
-        public bool IsThreefoldRepetition() => RepetitionHistory.Contains(ZobristHash);
+        public bool IsThreefoldRepetition() 
+        {
+            // Two-fold repetition
+            if (RepetitionHistory.Count(pos => pos == ZobristHash) >= 2)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        } 
 
         public string Fen => FenUtility.GetFen(this);
 

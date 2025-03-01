@@ -52,7 +52,6 @@ namespace Axiom.src.core.Move_Generation
         }
 
 
-
         private static void GenerateSlidingMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, byte piece, int square)
         {
             int startIndex = Piece.IsOrthogonalSlider(piece) ? 0 : 4;

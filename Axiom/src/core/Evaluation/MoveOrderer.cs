@@ -4,10 +4,9 @@ namespace Axiom.src.core.Evaluation
 {
     static class MoveOrderer
     {
-        public static void OrderMoves(ref Move[] moves, Board.Board board)
+        public static void OrderMoves(Move[] moves, Board.Board board)
         {
             Array.Sort(moves, (a, b) => MoveScore(b, board).CompareTo(MoveScore(a, board)));
-            Array.Reverse(moves);
         }
 
         static int CaptureScoreDelta(Move move, Board.Board board)
