@@ -1,4 +1,5 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Evaluation;
 using Axiom.src.core.Perft;
 using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
@@ -44,6 +45,9 @@ namespace Axiom.src
                     break;
                 case "r":
                     Console.WriteLine(BoardUtility.FlipSquare(63));
+                    break;
+                case "eval":
+                    Console.WriteLine(Evaluator.Evaluate(engine.board));
                     break;
                 default:
                     Console.WriteLine("Unknown message");
