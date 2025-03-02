@@ -8,3 +8,4 @@ IDEAS:
 - Speed up pawn move gen
 	- Generate single pushes and then filter for double pushes
 - Try a different prng for zobrist hashing
+- Store Zobrist hash in tt and check for collisions

@@ -23,6 +23,7 @@ namespace Axiom.src.core.Search
         public double startTime;
         public double timeLimit;
 
+        public TranspositionTable tt;
 
 
         public Board.Board board;
@@ -30,7 +31,7 @@ namespace Axiom.src.core.Search
         public Engine()
         {
             board = new Board.Board();
-
+            tt = new TranspositionTable();
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -76,7 +77,7 @@ namespace Axiom.src.core.Search
             SearchedNodes++;
             if (depth <= 0)
             {
-                return Evaluator.Evaluate(board);
+                return Quiecence(alpha, beta);
             }
 
             // Not in root node
