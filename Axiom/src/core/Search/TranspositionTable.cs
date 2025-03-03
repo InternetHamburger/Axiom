@@ -11,6 +11,7 @@ namespace Axiom.src.core.Search
         public int Score;
         public ushort Flag;  // Stores both depth and move flag
         public ushort BestMove; // Store the best move, In case the value can't be used we can search the best move from previous iteration first
+        public ulong ZobristHash;
 
         // Constants for bit masking
         public const ushort DepthMask = 0b1111111111110000;  // 12 bits for depth (up to 4096)
@@ -34,20 +35,22 @@ namespace Axiom.src.core.Search
         public readonly bool ContainsMove => BestMove != 0;
 
         // Constructor with score, depth, and flag
-        public TTEntry(int score, int depth, ushort flag)
+        public TTEntry(int score, int depth, ushort flag, ulong ZobristHash)
         {
             Score = score;
             BestMove = 0;
             // Combine depth (shifted) and flag into the Flag byte
             Flag = (ushort)((depth << 4) | (flag & FlagMask));
+            this.ZobristHash = ZobristHash;
         }
 
-        public TTEntry(int score, int depth, ushort flag, ushort move)
+        public TTEntry(int score, int depth, ushort flag, ushort move, ulong ZobristHash)
         {
             Score = score;
             BestMove = move;
             // Combine depth (shifted) and flag into the Flag byte
             Flag = (ushort)((depth << 4) | (flag & FlagMask));
+            this.ZobristHash = ZobristHash;
         }
 
         // Constructor for initializing a null entry
@@ -56,33 +59,6 @@ namespace Axiom.src.core.Search
             Score = score;
             BestMove = move;
             Flag = flag;
-        }
-    }
-
-
-    public class TranspositionTable
-    {
-        private TTEntry[] Entries;
-        public ulong numEntries;
-
-        public TranspositionTable(int sizeMb = 64)
-        {
-            int sizeBytes = sizeMb * 1024;
-            int numEntries = sizeBytes / 8;
-            this.numEntries = (ulong)numEntries;
-
-            Entries = new TTEntry[numEntries];
-        }
-
-        // Will override entry in slot
-        public void AddEntry(TTEntry entry, ulong zobristHash)
-        {
-            Entries[zobristHash % numEntries] = entry;
-        }
-
-        public TTEntry GetEntry(ulong zobristHash)
-        {
-            return Entries[zobristHash % numEntries];
         }
     }
 }
