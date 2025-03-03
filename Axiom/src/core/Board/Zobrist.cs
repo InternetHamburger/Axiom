@@ -4,11 +4,12 @@
     {
         public static ulong PseudoRandomNumber(ref ulong value)
         {
-            value = value * 74779667405 + 2891398636453;
-            value = ((value >> (int)((value >> 28) + 4)) ^ value) * 277803576737u;
-            value = (value >> 22) ^ value;
-            return value;
+            value ^= ((value + 92875224317UL) << 48) ^ ((16875224059UL * (value + 92875223911UL)) >> 32) + 92875224317UL;
+            value ^= ((value + 52875224453UL) >> 30) ^ ((92875223911UL * (value + 92875223911UL)) << 48) + 52875224453UL;
+            value ^= (value >> 30) * 52875224453UL * value + 92875223911UL;
+            return value * value;
         }
+
 
         public static readonly ulong[,] ZobristPieceValues = new ulong[Piece.MaxPieceIndex + 1, 64];
         public static readonly ulong[] CastlingRights = new ulong[16];
@@ -18,7 +19,7 @@
 
         static Zobrist()
         {
-            ulong Seed = 4161232025416123;
+            ulong Seed = 4161232026754816123;
             for (int i = 0; i < 64; i++)
             {
                 ZobristPieceValues[Piece.WhitePawn, i] = PseudoRandomNumber(ref Seed);

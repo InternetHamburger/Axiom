@@ -3,6 +3,7 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Axiom.src.core.Search
 {
@@ -13,7 +14,7 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        const int sizeTTMb = 128;
+        const int sizeTTMb = 512;
         const int sizeTTEntry = 16;
         const ulong numTTEntries = sizeTTMb * 1024 / sizeTTEntry;
 
@@ -63,8 +64,6 @@ namespace Axiom.src.core.Search
                 eval = currentEval;
                 Console.WriteLine($"info depth {depth} score cp {eval} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMove)}");
             }
-            
-          
             watch.Stop();
         }
 
@@ -85,10 +84,10 @@ namespace Axiom.src.core.Search
 
             if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
             {
-                //if (ttEntry.IsExact)
-                //{
-                //    return ttEntry.Score;
-                //}
+                if (ttEntry.IsExact)
+                {
+                    return ttEntry.Score;
+                }
                 //else if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
                 //{
                 //    alpha = ttEntry.Score;
@@ -118,7 +117,6 @@ namespace Axiom.src.core.Search
                     return 0;
                 }
             }
-
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             MoveOrderer.OrderMoves(pseudoLegalMoves, board);
@@ -175,10 +173,6 @@ namespace Axiom.src.core.Search
 
                 if (score > alpha)
                 {
-                    if (TTIndex == 4678)
-                    {
-                        Console.WriteLine(score);
-                    }
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
@@ -195,6 +189,7 @@ namespace Axiom.src.core.Search
                 }
             }
 
+
             if (numLegalMoves == 0)
             {
                 if (board.IsInCheck(board.WhiteToMove))
@@ -204,49 +199,17 @@ namespace Axiom.src.core.Search
                 return 0; // Stalemate
             }
 
+
+
             if (alphaWasRaised)
-            { 
-                
+            {
                 TT[TTIndex] = new(alpha, depth, TTEntry.ExactFlag, board.ZobristHash);
-                if (TTIndex == 4678)
-                {
-                    Console.WriteLine(alpha);
-                    Console.WriteLine(TT[4678].Score + " | Score");
-                }
             }
             else
             {
                 TT[TTIndex] = new(alpha, depth, TTEntry.UpperBoundFlag, board.ZobristHash);
             }
 
-            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
-            {
-                if (ttEntry.IsExact)
-                {
-                    if (ttEntry.Score != alpha)
-                    {
-                        BoardUtility.PrintBoard(board);
-                        Console.WriteLine(board.Fen);
-                        Console.WriteLine(ttEntry.Score);
-                        Console.WriteLine(TTIndex);
-                        Console.WriteLine(alpha);
-                        throw new Exception("hmm");
-                    }
-                }
-                //else if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
-                //{
-                //    alpha = ttEntry.Score;
-                //}
-                //else if (ttEntry.IsUpperBound && ttEntry.Score < beta)
-                //{
-                //    beta = ttEntry.Score;
-                //}
-
-                //if (alpha >= beta)
-                //{
-                //    return alpha; // Cutoff with the lower bound score
-                //}
-            }
 
             return alpha;
         }

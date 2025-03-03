@@ -1,4 +1,5 @@
 ﻿using Axiom.src;
+using Axiom.src.core.Board;
 
 namespace Axiom
 {
@@ -9,7 +10,6 @@ namespace Axiom
             UCI uci = new();
 
             string? message = Console.ReadLine();
-
 
             while (message != "quit")
             {
