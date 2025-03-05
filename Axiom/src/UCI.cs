@@ -228,5 +228,19 @@ namespace Axiom.src
             
             return GetSearchTime(timeLeft, increment);
         }
+
+        public static string GetCorrectEval(int eval)
+        {
+            if (Math.Abs(eval) > 99999999)
+            {
+                int mateLength = 999999999 - Math.Abs(eval) + 1;
+                mateLength *= eval < 0 ? -1 : 1;
+                return "mate " + mateLength / 2;
+            }
+            else
+            {
+                return "cp " + eval;
+            }
+        }
     }
 }

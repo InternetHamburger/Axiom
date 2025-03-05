@@ -49,20 +49,46 @@ namespace Axiom.src.core.Search
         public void Search(int depthlimit, int timelimit = int.MaxValue)
         {
             InitSearch();
-            this.timeLimit = timelimit;
+            timeLimit = timelimit;
+
+
+
+            int alpha;
+            int beta;
+
+            const int delta = 50;
+
+
             var watch = new Stopwatch();
             watch.Start();
-
             for (int depth = 1; depth <= depthlimit; depth++)
             {
-                NegaMax(depth, 0, NegativeInf, PositiveInf);
+                alpha = eval - delta;
+                beta = eval + delta;
+
+
+                NegaMax(depth, 0, alpha, beta);
+
+                if (currentEval >= beta)
+                {
+                    alpha = eval - delta;
+
+                    NegaMax(depth, 0, alpha, PositiveInf);
+                }
+                else if (currentEval <= alpha)
+                {
+                    beta = eval + delta;
+                    NegaMax(depth, 0, NegativeInf, beta);
+                }
+
+
                 if (IsTimeUp)
                 {
                     return;
                 }
                 bestMoveThisIteration = currentBestMove;
-                eval = currentEval;
-                Console.WriteLine($"info depth {depth} score cp {eval} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMoveThisIteration)}");
+                this.eval = this.currentEval;
+                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(this.eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMoveThisIteration)}");
             }
             watch.Stop();
         }
@@ -73,6 +99,7 @@ namespace Axiom.src.core.Search
             SearchedNodes = 0;
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
+            currentEval = NegativeInf;
         }
 
 
@@ -130,6 +157,7 @@ namespace Axiom.src.core.Search
             
             
             int numLegalMoves = 0;
+            int bestScore = NegativeInf;
             bool alphaWasRaised = false;
             Move bestMove = Move.NullMove;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
@@ -181,22 +209,26 @@ namespace Axiom.src.core.Search
                     return 0;
                 }
 
-                if (score > alpha)
+                if (score > bestScore)
                 {
+                    bestScore = score;
                     bestMove = move;
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
                         currentEval = score;
                     }
-                    alphaWasRaised = true;
-                    alpha = score;
+                    if (score > alpha)
+                    {
+                        alphaWasRaised = true;
+                        alpha = score;
+                    }
                 }
 
                 if (beta <= alpha)
                 {
                     TT[TTIndex] = new(beta, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
-                    return beta; // Return beta on cutoff
+                    return bestScore; // Return beta on cutoff
                 }
             }
 
@@ -205,7 +237,7 @@ namespace Axiom.src.core.Search
             {
                 if (board.IsInCheck(board.WhiteToMove))
                 {
-                    return NegativeInf; // Checkmate
+                    return NegativeInf + plyFromRoot; // Checkmate
                 }
                 return 0; // Stalemate
             }
@@ -214,13 +246,13 @@ namespace Axiom.src.core.Search
 
             if (alphaWasRaised)
             {
-                TT[TTIndex] = new(alpha, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
+                TT[TTIndex] = new(bestScore, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
             }
             else
             {
                 TT[TTIndex] = new(alpha, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
             }
-            return alpha;
+            return bestScore;
         }
 
         private int Quiecence(int alpha, int beta)
