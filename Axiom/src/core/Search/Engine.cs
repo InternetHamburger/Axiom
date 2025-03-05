@@ -14,13 +14,13 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        const int sizeTTMb = 512;
+        const int sizeTTMb = 32;
         const int sizeTTEntry = 16;
-        const ulong numTTEntries = sizeTTMb * 1024 / sizeTTEntry;
+        const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
 
 
         public int SearchedNodes;
-        public Move bestMove;
+        public Move bestMoveThisIteration;
         public Move currentBestMove;
         public int eval;
         public int currentEval;
@@ -60,9 +60,9 @@ namespace Axiom.src.core.Search
                 {
                     return;
                 }
-                bestMove = currentBestMove;
+                bestMoveThisIteration = currentBestMove;
                 eval = currentEval;
-                Console.WriteLine($"info depth {depth} score cp {eval} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMove)}");
+                Console.WriteLine($"info depth {depth} score cp {eval} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMoveThisIteration)}");
             }
             watch.Stop();
         }
@@ -88,19 +88,19 @@ namespace Axiom.src.core.Search
                 {
                     return ttEntry.Score;
                 }
-                //else if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
-                //{
-                //    alpha = ttEntry.Score;
-                //}
-                //else if (ttEntry.IsUpperBound && ttEntry.Score < beta)
-                //{
-                //    beta = ttEntry.Score;
-                //}
+                else if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
+                {
+                    alpha = ttEntry.Score;
+                }
+                else if (ttEntry.IsUpperBound && ttEntry.Score < beta)
+                {
+                    beta = ttEntry.Score;
+                }
 
-                //if (alpha >= beta)
-                //{
-                //    return alpha; // Cutoff with the lower bound score
-                //}
+                if (alpha >= beta)
+                {
+                    return alpha; // Cutoff with the lower bound score
+                }
             }
 
             SearchedNodes++;
@@ -119,9 +119,19 @@ namespace Axiom.src.core.Search
             }
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
-            MoveOrderer.OrderMoves(pseudoLegalMoves, board);
+            if (plyFromRoot == 0)
+            {
+                MoveOrderer.OrderMoves(pseudoLegalMoves, board, Move.NullMove);
+            }
+            else
+            {
+                MoveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove));
+            }
+            
+            
             int numLegalMoves = 0;
             bool alphaWasRaised = false;
+            Move bestMove = Move.NullMove;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
@@ -173,6 +183,7 @@ namespace Axiom.src.core.Search
 
                 if (score > alpha)
                 {
+                    bestMove = move;
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
@@ -184,7 +195,7 @@ namespace Axiom.src.core.Search
 
                 if (beta <= alpha)
                 {
-                    TT[TTIndex] = new(beta, depth, TTEntry.LowerBoundFlag, board.ZobristHash);
+                    TT[TTIndex] = new(beta, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return beta; // Return beta on cutoff
                 }
             }
@@ -203,14 +214,12 @@ namespace Axiom.src.core.Search
 
             if (alphaWasRaised)
             {
-                TT[TTIndex] = new(alpha, depth, TTEntry.ExactFlag, board.ZobristHash);
+                TT[TTIndex] = new(alpha, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
             }
             else
             {
-                TT[TTIndex] = new(alpha, depth, TTEntry.UpperBoundFlag, board.ZobristHash);
+                TT[TTIndex] = new(alpha, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
             }
-
-
             return alpha;
         }
 
@@ -221,7 +230,7 @@ namespace Axiom.src.core.Search
 
             if (standingPat >= beta)
             {
-                return beta;
+                return standingPat;
             }
 
             if (alpha < standingPat)
@@ -230,7 +239,7 @@ namespace Axiom.src.core.Search
             }
 
             Move[] captureMoves = MoveGenerator.GetPseudoLegalCaptures(board);
-            MoveOrderer.OrderMoves(captureMoves, board);
+            MoveOrderer.OrderCaptures(captureMoves, board);
 
             if (IsTimeUp)
             {

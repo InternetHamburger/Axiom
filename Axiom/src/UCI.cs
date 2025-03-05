@@ -119,7 +119,7 @@ namespace Axiom.src
 
                     engine.Search(depth, searchTime);
 
-                    Console.WriteLine("bestmove " + BoardUtility.MoveToUci(engine.bestMove));
+                    Console.WriteLine("bestmove " + BoardUtility.MoveToUci(engine.bestMoveThisIteration));
                     break;
             }
         }
