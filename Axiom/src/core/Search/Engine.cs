@@ -60,7 +60,7 @@ namespace Axiom.src.core.Search
             int alpha;
             int beta;
 
-            const int delta = 50;
+            const int delta = 7;
 
 
             var watch = new Stopwatch();
@@ -70,19 +70,38 @@ namespace Axiom.src.core.Search
                 alpha = eval - delta;
                 beta = eval + delta;
 
-
                 NegaMax(depth, 0, alpha, beta);
                 maxDepth = depth;
-                if (currentEval >= beta)
+                int numReSearches = 0;
+                while (currentEval >= beta || currentEval <= alpha)
                 {
-                    alpha = eval - delta;
-
-                    NegaMax(depth, 0, alpha, PositiveInf);
-                }
-                else if (currentEval <= alpha)
-                {
-                    beta = eval + delta;
-                    NegaMax(depth, 0, NegativeInf, beta);
+                    if (numReSearches == 7)
+                    {
+                        if (currentEval >= beta)
+                        {
+                            alpha = eval - delta;
+                            NegaMax(depth, 0, alpha, PositiveInf);
+                        }
+                        else if (currentEval <= alpha)
+                        {
+                            beta = eval + delta;
+                            NegaMax(depth, 0, NegativeInf, beta);
+                        }
+                        break;
+                    }
+                    if (currentEval >= beta)
+                    {
+                        alpha = eval - delta;
+                        beta += 3 * delta;
+                        NegaMax(depth, 0, alpha, beta);
+                    }
+                    else if (currentEval <= alpha)
+                    {
+                        beta = eval + delta;
+                        alpha -= 3 * delta;
+                        NegaMax(depth, 0, alpha, beta);
+                    }
+                    numReSearches++;
                 }
 
 
@@ -301,7 +320,7 @@ namespace Axiom.src.core.Search
 
                 if (score >= beta)
                 {
-                    return beta;
+                    return score;
                 }
                 if (score > alpha)
                 {
