@@ -3,6 +3,7 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
+using System.Numerics;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace Axiom.src.core.Search
@@ -26,6 +27,7 @@ namespace Axiom.src.core.Search
         public Move currentBestMove;
         public int eval;
         public int currentEval;
+        public int maxDepth;
 
         public double startTime;
         public double timeLimit;
@@ -70,7 +72,7 @@ namespace Axiom.src.core.Search
 
 
                 NegaMax(depth, 0, alpha, beta);
-
+                maxDepth = depth;
                 if (currentEval >= beta)
                 {
                     alpha = eval - delta;
@@ -89,8 +91,8 @@ namespace Axiom.src.core.Search
                     return;
                 }
                 bestMoveThisIteration = currentBestMove;
-                this.eval = this.currentEval;
-                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(this.eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {BoardUtility.MoveToUci(bestMoveThisIteration)}");
+                eval = currentEval;
+                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()}");
             }
             watch.Stop();
         }
@@ -333,6 +335,38 @@ namespace Axiom.src.core.Search
             GamePhase = ((GamePhase << 8) + (TotalPhase >> 1)) / TotalPhase;
         }
 
+        public string GetPv()
+        {
+            string pv = "";
+            ulong hash = board.ZobristHash;
+            int depth = 0; // Prevent infinite loops
+            List<Move> playedMoves = new List<Move>(); // Store played moves for undoing
+
+            while (depth < maxDepth)
+            {
+                int index = (int)(hash % numTTEntries);
+                TTEntry entry = TT[index];
+
+                if (entry.ZobristHash != hash || entry.BestMove == 0)
+                    break; // Stop if no valid move is found in the TT
+
+                string moveUci = BoardUtility.MoveToUci(new Move(entry.BestMove));
+                pv += moveUci + " ";
+
+                board.MakeMove(new Move(entry.BestMove)); // Play the move on the board
+                playedMoves.Add(new Move(entry.BestMove)); // Store the move for undoing
+                hash = board.ZobristHash; // Update hash after move
+                depth++;
+            }
+
+            // Undo moves in reverse order to restore board state
+            for (int i = playedMoves.Count - 1; i >= 0; i--)
+            {
+                board.UndoMove(playedMoves[i]);
+            }
+
+            return pv.Trim();
+        }
         bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;
     }
 }
