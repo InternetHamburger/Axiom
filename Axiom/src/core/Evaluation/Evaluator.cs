@@ -150,44 +150,70 @@ namespace Axiom.src.core.Evaluation
         };
 
 
-        public static readonly int[,] MaterialValues;
+        public static readonly int[,] MGmaterialValues;
+        public static readonly int[,] EGmaterialValues;
 
 
         static Evaluator()
         {
-            MaterialValues = new int[Piece.MaxPieceIndex + 1, 64];
+            MGmaterialValues = new int[Piece.MaxPieceIndex + 1, 64];
+            EGmaterialValues = new int[Piece.MaxPieceIndex + 1, 64];
 
             for (int i = 0; i < 64; i++)
             {
-                MaterialValues[Piece.WhitePawn, i] = 100 + mg_pawn_table[i];
-                MaterialValues[Piece.WhiteKnight, i] = 300 + mg_knight_table[i];
-                MaterialValues[Piece.WhiteBishop, i] = 300 + mg_bishop_table[i];
-                MaterialValues[Piece.WhiteRook, i] = 500 + mg_rook_table[i];
-                MaterialValues[Piece.WhiteQueen, i] = 900 + mg_queen_table[i];
-                MaterialValues[Piece.WhiteKing, i] = 0 + mg_king_table[i];
+                MGmaterialValues[Piece.WhitePawn, i] = 100 + mg_pawn_table[i];
+                MGmaterialValues[Piece.WhiteKnight, i] = 300 + mg_knight_table[i];
+                MGmaterialValues[Piece.WhiteBishop, i] = 300 + mg_bishop_table[i];
+                MGmaterialValues[Piece.WhiteRook, i] = 500 + mg_rook_table[i];
+                MGmaterialValues[Piece.WhiteQueen, i] = 900 + mg_queen_table[i];
+                MGmaterialValues[Piece.WhiteKing, i] = 0 + mg_king_table[i];
 
-                MaterialValues[Piece.BlackPawn, i] = -100 - mg_pawn_table[BoardUtility.FlipSquare(i)];
-                MaterialValues[Piece.BlackKnight, i] = -300 - mg_knight_table[BoardUtility.FlipSquare(i)];
-                MaterialValues[Piece.BlackBishop, i] = -300 - mg_bishop_table[BoardUtility.FlipSquare(i)];
-                MaterialValues[Piece.BlackRook, i] = -500 - mg_rook_table[BoardUtility.FlipSquare(i)];
-                MaterialValues[Piece.BlackQueen, i] = -900 - mg_queen_table[BoardUtility.FlipSquare(i)];
-                MaterialValues[Piece.BlackKing, i] = 0 - mg_king_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackPawn, i] = -100 - mg_pawn_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackKnight, i] = -300 - mg_knight_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackBishop, i] = -300 - mg_bishop_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackRook, i] = -500 - mg_rook_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackQueen, i] = -900 - mg_queen_table[BoardUtility.FlipSquare(i)];
+                MGmaterialValues[Piece.BlackKing, i] = 0 - mg_king_table[BoardUtility.FlipSquare(i)];
+
+                EGmaterialValues[Piece.WhitePawn, i] = 100 + eg_pawn_table[i];
+                EGmaterialValues[Piece.WhiteKnight, i] = 300 + eg_knight_table[i];
+                EGmaterialValues[Piece.WhiteBishop, i] = 300 + eg_bishop_table[i];
+                EGmaterialValues[Piece.WhiteRook, i] = 500 + eg_rook_table[i];
+                EGmaterialValues[Piece.WhiteQueen, i] = 900 + eg_queen_table[i];
+                EGmaterialValues[Piece.WhiteKing, i] = 0 + eg_king_table[i];
+
+                EGmaterialValues[Piece.BlackPawn, i] = -100 - eg_pawn_table[BoardUtility.FlipSquare(i)];
+                EGmaterialValues[Piece.BlackKnight, i] = -300 - eg_knight_table[BoardUtility.FlipSquare(i)];
+                EGmaterialValues[Piece.BlackBishop, i] = -300 - eg_bishop_table[BoardUtility.FlipSquare(i)];
+                EGmaterialValues[Piece.BlackRook, i] = -500 - eg_rook_table[BoardUtility.FlipSquare(i)];
+                EGmaterialValues[Piece.BlackQueen, i] = -900 - eg_queen_table[BoardUtility.FlipSquare(i)];
+                EGmaterialValues[Piece.BlackKing, i] = 0 - eg_king_table[BoardUtility.FlipSquare(i)];
             }
         }
 
-        public static int Evaluate(Board.Board board)
+        public static int Evaluate(Board.Board board, int GamePhase)
         {
-            int eval = 0;
+            int MGeval = 0;
+            int EGeval = 0;
             for (int i = 0; i < 64; i++)
             {
-                eval += MaterialValue(board.Squares[i], i);
+                MGeval += MGmaterialValue(board.Squares[i], i);
+                EGeval += EGmaterialValue(board.Squares[i], i);
             }
+
+            int eval = (MGeval * (256 - GamePhase) + EGeval * GamePhase) / 256;
+
             return eval * (board.WhiteToMove ? 1 : -1);
         }
 
-        public static int MaterialValue(byte piece, int square)
+        public static int MGmaterialValue(byte piece, int square)
         {
-            return MaterialValues[piece, square];
+            return MGmaterialValues[piece, square];
+        }
+
+        public static int EGmaterialValue(byte piece, int square)
+        {
+            return EGmaterialValues[piece, square];
         }
     }
 }

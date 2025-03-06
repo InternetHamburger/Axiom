@@ -47,7 +47,8 @@ namespace Axiom.src
                     Console.WriteLine(BoardUtility.FlipSquare(63));
                     break;
                 case "eval":
-                    Console.WriteLine(Evaluator.Evaluate(engine.board) * (engine.board.WhiteToMove ? 1 : -1));
+                    engine.CalculateGamePhase();
+                    Console.WriteLine(Evaluator.Evaluate(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
                     break;
                 default:
                     Console.WriteLine("Unknown message");

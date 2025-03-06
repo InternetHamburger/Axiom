@@ -18,6 +18,8 @@ namespace Axiom.src.core.Search
         const int sizeTTEntry = 16;
         const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
 
+        public int GamePhase;
+        public const int TotalPhase = 24;
 
         public int SearchedNodes;
         public Move bestMoveThisIteration;
@@ -100,12 +102,12 @@ namespace Axiom.src.core.Search
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
             currentEval = NegativeInf;
+            CalculateGamePhase();
         }
 
 
         private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
-            
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
 
@@ -258,7 +260,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board);
+            int standingPat = Evaluator.Evaluate(board, GamePhase);
 
             if (standingPat >= beta)
             {
@@ -306,6 +308,29 @@ namespace Axiom.src.core.Search
             }
 
             return alpha;
+        }
+
+        static int PhaseScore(byte piece)
+        {
+            return Piece.PieceType(piece) switch
+            {
+                Piece.Pawn => 0,
+                Piece.Knight => 1,
+                Piece.Bishop => 1,
+                Piece.Rook => 2,
+                Piece.Queen => 4,
+                _ => 0
+            };
+        }
+
+        public void CalculateGamePhase()
+        {
+            GamePhase = TotalPhase;
+            foreach (byte piece in board.Squares)
+            {
+                GamePhase -= PhaseScore(piece);
+            }
+            GamePhase = ((GamePhase << 8) + (TotalPhase >> 1)) / TotalPhase;
         }
 
         bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;
