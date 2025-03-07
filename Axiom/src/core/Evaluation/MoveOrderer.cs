@@ -4,9 +4,9 @@ namespace Axiom.src.core.Evaluation
 {
     static class MoveOrderer
     {
-        public static void OrderMoves(Move[] moves, Board.Board board, Move ttMove)
+        public static void OrderMoves(Move[] moves, Board.Board board, Move ttMove, Move killerMove)
         {
-            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove).CompareTo(MoveScore(a, board, ttMove)));
+            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, killerMove).CompareTo(MoveScore(a, board, ttMove, killerMove)));
         }
 
         public static void OrderCaptures(Move[] moves, Board.Board board)
@@ -32,11 +32,15 @@ namespace Axiom.src.core.Evaluation
             };
         }
 
-        static int MoveScore(Move move, Board.Board board, Move ttMove)
+        static int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
         {
             if (Move.SameMove(ttMove, move))
             {
                 return 10000;
+            }
+            else if (Move.SameMove(move, killerMove))
+            {
+                return 9999;
             }
             if (board.Squares[move.TargetSquare] != 0)
             {

@@ -1,11 +1,9 @@
-TODO:
-
-
-
 IDEAS:
 - Speed up checking for check with ray masks
 	- Differenciate between diagonal and orthogonal sliders
 - Speed up pawn move gen
 	- Generate single pushes and then filter for double pushes
-- Try a different prng for zobrist hashing
-- Store Zobrist hash in tt and check for collisions
+- Implement better move ordering
+	- Killer moves
+	- Quiet history heuristic
+- Implement Pvs

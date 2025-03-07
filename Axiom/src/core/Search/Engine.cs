@@ -3,8 +3,6 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
-using System.Numerics;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Axiom.src.core.Search
 {
@@ -23,6 +21,8 @@ namespace Axiom.src.core.Search
         public const int TotalPhase = 24;
 
         public int SearchedNodes;
+        public int betaCutoffs;
+        public int firstMoveBetaCutoffs;
         public Move bestMoveThisIteration;
         public Move currentBestMove;
         public int eval;
@@ -33,6 +33,7 @@ namespace Axiom.src.core.Search
         public double timeLimit;
 
         public TTEntry[] TT;
+        public Move[] KillerMoveTable;
 
 
         public Board.Board board;
@@ -41,6 +42,7 @@ namespace Axiom.src.core.Search
         {
             board = new Board.Board();
             TT = new TTEntry[numTTEntries];
+            KillerMoveTable = new Move[256];
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -111,7 +113,7 @@ namespace Axiom.src.core.Search
                 }
                 bestMoveThisIteration = currentBestMove;
                 eval = currentEval;
-                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()}");
+                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()} firstMoveBetaCutoffs {(double)firstMoveBetaCutoffs / (double)betaCutoffs}");
             }
             watch.Stop();
         }
@@ -119,6 +121,7 @@ namespace Axiom.src.core.Search
         private void InitSearch()
         {
             TT = new TTEntry[numTTEntries];
+            KillerMoveTable = new Move[256];
             SearchedNodes = 0;
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
@@ -169,14 +172,7 @@ namespace Axiom.src.core.Search
             }
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
-            if (plyFromRoot == 0)
-            {
-                MoveOrderer.OrderMoves(pseudoLegalMoves, board, Move.NullMove);
-            }
-            else
-            {
-                MoveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove));
-            }
+            MoveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), KillerMoveTable[plyFromRoot]);
             
             
             int numLegalMoves = 0;
@@ -250,6 +246,19 @@ namespace Axiom.src.core.Search
 
                 if (beta <= alpha)
                 {
+                    if (i == 0)
+                    {
+                        betaCutoffs++;
+                        firstMoveBetaCutoffs++;
+                    }
+                    else
+                    {
+                        betaCutoffs++;
+                    }
+                    if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
+                    {
+                        KillerMoveTable[plyFromRoot] = move;
+                    }
                     TT[TTIndex] = new(beta, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return bestScore; // Return beta on cutoff
                 }
