@@ -113,7 +113,7 @@ namespace Axiom.src.core.Search
                 }
                 bestMoveThisIteration = currentBestMove;
                 eval = currentEval;
-                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()} firstMoveBetaCutoffs {(double)firstMoveBetaCutoffs / (double)betaCutoffs}");
+                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()}");
             }
             watch.Stop();
         }

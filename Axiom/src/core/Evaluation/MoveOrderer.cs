@@ -16,7 +16,7 @@ namespace Axiom.src.core.Evaluation
 
         static int CaptureScoreDelta(Move move, Board.Board board)
         {
-            return MoveOrderPieceValue(board.Squares[move.TargetSquare]) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
+            return 100 * MoveOrderPieceValue(board.Squares[move.TargetSquare]) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
         }
 
         static int MoveOrderPieceValue(byte piece)
