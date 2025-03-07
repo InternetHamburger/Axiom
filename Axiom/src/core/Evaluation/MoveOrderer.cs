@@ -2,14 +2,29 @@
 
 namespace Axiom.src.core.Evaluation
 {
-    static class MoveOrderer
+    public class MoveOrderer
     {
-        public static void OrderMoves(Move[] moves, Board.Board board, Move ttMove, Move killerMove)
+        public int[,,] HistoryTable;
+        public Move[] KillerMoves;
+
+        public MoveOrderer()
         {
-            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, killerMove).CompareTo(MoveScore(a, board, ttMove, killerMove)));
+            HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
+            KillerMoves = new Move[256];
         }
 
-        public static void OrderCaptures(Move[] moves, Board.Board board)
+        public void Init()
+        {
+            HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
+            KillerMoves = new Move[256];
+        }
+
+        public void OrderMoves(Move[] moves, Board.Board board, Move ttMove, int plyFromRoot)
+        {
+            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, KillerMoves[plyFromRoot]).CompareTo(MoveScore(a, board, ttMove, KillerMoves[plyFromRoot])));
+        }
+
+        public void OrderCaptures(Move[] moves, Board.Board board)
         {
             Array.Sort(moves, (a, b) => CaptureScore(b, board).CompareTo(CaptureScore(a, board)));
         }
@@ -32,7 +47,7 @@ namespace Axiom.src.core.Evaluation
             };
         }
 
-        static int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
+        int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
         {
             if (Move.SameMove(ttMove, move))
             {
@@ -51,7 +66,10 @@ namespace Axiom.src.core.Evaluation
             }
             else
             {
-                return 0;
+                int index1 = board.WhiteToMove ? 0 : 1;
+                int index2 = board.Squares[move.TargetSquare];
+                int index3 = move.TargetSquare;
+                return HistoryTable[index1, index2, index3] - 10000;
             }
         }
 
@@ -61,6 +79,22 @@ namespace Axiom.src.core.Evaluation
             int moveScore = captureMaterialDelta;
 
             return moveScore;
+        }
+
+        public void UpdateHistoryTableBetaCutoff(Board.Board board, Move move, int depth)
+        {
+            int index1 = board.WhiteToMove ? 0 : 1;
+            int index2 = board.Squares[move.TargetSquare];
+            int index3 = move.TargetSquare;
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + 3 * depth * depth, 0, 10000);
+        }
+
+        public void UpdateHistoryTableAlphaRaise(Board.Board board, Move move, int depth)
+        {
+            int index1 = board.WhiteToMove ? 0 : 1;
+            int index2 = board.Squares[move.TargetSquare];
+            int index3 = move.TargetSquare;
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + 2 * depth, 0, 10000);
         }
     }
 }

@@ -7,3 +7,5 @@ IDEAS:
 	- Killer moves
 	- Quiet history heuristic
 - Implement Pvs
+- History heuristic
+	- Update on alpha raise
