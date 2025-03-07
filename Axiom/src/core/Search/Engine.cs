@@ -3,6 +3,7 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
+using System.Security;
 
 namespace Axiom.src.core.Search
 {
@@ -222,8 +223,24 @@ namespace Axiom.src.core.Search
                 }
 
                 numLegalMoves++;
+                int score = 0;
 
-                int score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
+                if (i == 0)
+                {
+                    score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
+                }
+                else
+                {
+                    score = -NegaMax(depth - 1, plyFromRoot + 1, -alpha - 1, -alpha);
+                    if (score > alpha)
+                    {
+                        score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
+                    }
+                }
+
+
+
+
 
                 board.UndoMove(move);
 
