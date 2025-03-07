@@ -72,9 +72,12 @@ namespace Axiom.src.core.Search
                 alpha = eval - delta;
                 beta = eval + delta;
 
+                // Initial call
+                // Very tight bounds, but pays off
                 NegaMax(depth, 0, alpha, beta);
                 maxDepth = depth;
                 int numReSearches = 0;
+
                 while (currentEval >= beta || currentEval <= alpha)
                 {
                     if (numReSearches == 7)
@@ -259,7 +262,7 @@ namespace Axiom.src.core.Search
                     {
                         KillerMoveTable[plyFromRoot] = move;
                     }
-                    TT[TTIndex] = new(beta, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
+                    TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return bestScore; // Return beta on cutoff
                 }
             }
@@ -282,7 +285,7 @@ namespace Axiom.src.core.Search
             }
             else
             {
-                TT[TTIndex] = new(alpha, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
+                TT[TTIndex] = new(bestScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
             }
             return bestScore;
         }

@@ -127,7 +127,7 @@ namespace Axiom.src
 
         public static int GetSearchTime(int timeLeftMs, int incrementMs)
         {
-            return (timeLeftMs / 60 + incrementMs / 2);
+            return timeLeftMs / 60 + incrementMs / 2;
         }
 
         public static Move ReturnMove(Board board, string move)
