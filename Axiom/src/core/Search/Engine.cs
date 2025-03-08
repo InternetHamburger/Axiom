@@ -65,7 +65,6 @@ namespace Axiom.src.core.Search
 
             const int delta = 7;
 
-
             var watch = new Stopwatch();
             watch.Start();
             for (int depth = 1; depth <= depthlimit; depth++)
@@ -124,6 +123,8 @@ namespace Axiom.src.core.Search
 
         private void InitSearch()
         {
+            maxDepth = 0;
+            eval = 0;
             TT = new TTEntry[numTTEntries];
             moveOrderer.Init();
             SearchedNodes = 0;
@@ -156,7 +157,7 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return alpha; // Cutoff with the lower bound score
+                    return beta; // Cutoff with the lower bound score
                 }
             }
 
@@ -172,6 +173,22 @@ namespace Axiom.src.core.Search
                 if (board.IsThreefoldRepetition())
                 {
                     return 0;
+                }
+            }
+
+            // Null Move Pruning
+            const int NULL_MOVE_MIN_DEPTH = 3;
+            const int R = 2; // Reduction factor for null move pruning
+
+            if (depth >= NULL_MOVE_MIN_DEPTH && !board.IsInCheck(board.WhiteToMove) && !board.InEndgame(GamePhase))
+            {
+                board.MakeNullMove();
+                int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
+                board.UndoNullMove();
+
+                if (nullMoveScore >= beta)
+                {
+                    return nullMoveScore; // Fail-high cutoff
                 }
             }
 
@@ -236,10 +253,6 @@ namespace Axiom.src.core.Search
                         score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
                     }
                 }
-
-
-
-
 
                 board.UndoMove(move);
 

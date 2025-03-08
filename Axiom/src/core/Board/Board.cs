@@ -252,6 +252,40 @@ namespace Axiom.src.core.Board
             RepetitionHistory.RemoveAt(RepetitionHistory.Count - 1);
         }
 
+        public void MakeNullMove()
+        {
+            RepetitionHistory.Add(ZobristHash);
+            int castlingRights = GameHistory.Peek().castlingRights;
+
+            byte capturedPiece = 0;
+
+            int newEnpassantFile = -1;
+
+            // Remove legality for en passant
+            if (CurrentGameState.enPassantFile != -1)
+            {
+                ZobristHash ^= Zobrist.EnPassantFiles[CurrentGameState.enPassantFile];
+            }
+
+            ZobristHash ^= Zobrist.WhiteToMove;
+
+            GameState newGameState = new(capturedPiece, newEnpassantFile, castlingRights, 0, ZobristHash);
+            CurrentGameState = newGameState;
+
+            WhiteToMove = !WhiteToMove;
+            GameHistory.Push(newGameState);
+        }
+
+        public void UndoNullMove()
+        {
+            WhiteToMove = !WhiteToMove;
+
+            GameHistory.Pop();
+            CurrentGameState = GameHistory.Peek();
+            ZobristHash = CurrentGameState.zobristKey;
+            RepetitionHistory.RemoveAt(RepetitionHistory.Count - 1);
+        }
+
         public bool IsInCheck(bool IsWhite)
         {
             int square = KingSquares[IsWhite ? 0 : 1];
@@ -396,6 +430,8 @@ namespace Axiom.src.core.Board
                 return false;
             }
         }
+
+        public bool InEndgame(int GamePhase) => GamePhase > 200;
 
         public string Fen => FenUtility.GetFen(this);
 

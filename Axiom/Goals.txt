@@ -4,8 +4,7 @@ IDEAS:
 - Speed up pawn move gen
 	- Generate single pushes and then filter for double pushes
 - Implement better move ordering
-	- Killer moves
-	- Quiet history heuristic
-- Implement Pvs
 - History heuristic
-	- Update on alpha raise
+	- Tweak values
+- Null move pruning
+	- Return beta instead of search score
