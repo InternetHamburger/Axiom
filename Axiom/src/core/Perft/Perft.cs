@@ -1,6 +1,5 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
-using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -169,7 +168,7 @@ namespace Axiom.src.core.Perft
             Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
 
             ulong nodes = 0;
-            foreach(Move move in moves)
+            foreach (Move move in moves)
             {
                 if (move.MoveFlag == Move.CastleFlag)
                 {

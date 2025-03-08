@@ -5,7 +5,7 @@ namespace Axiom.src.core.Evaluation
 {
     static class Evaluator
     {
-        private static readonly int[] mg_pawn_table = 
+        private static readonly int[] mg_pawn_table =
         {
               0,   0,   0,   0,   0,   0,  0,   0,
              98, 134,  61,  95,  68, 126, 34, -11,
@@ -17,7 +17,7 @@ namespace Axiom.src.core.Evaluation
               0,   0,   0,   0,   0,   0,  0,   0,
         };
 
-        private static readonly int[] eg_pawn_table = 
+        private static readonly int[] eg_pawn_table =
         {
               0,   0,   0,   0,   0,   0,   0,   0,
             178, 173, 158, 134, 147, 132, 165, 187,
@@ -29,7 +29,7 @@ namespace Axiom.src.core.Evaluation
               0,   0,   0,   0,   0,   0,   0,   0,
         };
 
-        private static readonly int[] mg_knight_table = 
+        private static readonly int[] mg_knight_table =
         {
             -167, -89, -34, -49,  61, -97, -15, -107,
              -73, -41,  72,  36,  23,  62,   7,  -17,
@@ -41,7 +41,7 @@ namespace Axiom.src.core.Evaluation
             -105, -21, -58, -33, -17, -28, -19,  -23,
         };
 
-        private static readonly int[] eg_knight_table = 
+        private static readonly int[] eg_knight_table =
         {
             -58, -38, -13, -28, -31, -27, -63, -99,
             -25,  -8, -25,  -2,  -9, -25, -24, -52,
@@ -53,7 +53,7 @@ namespace Axiom.src.core.Evaluation
             -29, -51, -23, -15, -22, -18, -50, -64,
         };
 
-        private static readonly int[] mg_bishop_table = 
+        private static readonly int[] mg_bishop_table =
         {
             -29,   4, -82, -37, -25, -42,   7,  -8,
             -26,  16, -18, -13,  30,  59,  18, -47,
@@ -65,7 +65,7 @@ namespace Axiom.src.core.Evaluation
             -33,  -3, -14, -21, -13, -12, -39, -21,
         };
 
-        private static readonly int[] eg_bishop_table = 
+        private static readonly int[] eg_bishop_table =
         {
             -14, -21, -11,  -8, -7,  -9, -17, -24,
              -8,  -4,   7, -12, -3, -13,  -4, -14,
@@ -77,7 +77,7 @@ namespace Axiom.src.core.Evaluation
             -23,  -9, -23,  -5, -9, -16,  -5, -17,
         };
 
-        private static readonly int[] mg_rook_table = 
+        private static readonly int[] mg_rook_table =
         {
              32,  42,  32,  51, 63,  9,  31,  43,
              27,  32,  58,  62, 80, 67,  26,  44,
@@ -89,7 +89,7 @@ namespace Axiom.src.core.Evaluation
             -19, -13,   1,  17, 16,  7, -37, -26,
         };
 
-        private static readonly int[] eg_rook_table = 
+        private static readonly int[] eg_rook_table =
         {
             13, 10, 18, 15, 12,  12,   8,   5,
             11, 13, 13, 11, -3,   3,   8,   3,
@@ -101,7 +101,7 @@ namespace Axiom.src.core.Evaluation
             -9,  2,  3, -1, -5, -13,   4, -20,
         };
 
-        private static readonly int[] mg_queen_table = 
+        private static readonly int[] mg_queen_table =
         {
             -28,   0,  29,  12,  59,  44,  43,  45,
             -24, -39,  -5,   1, -16,  57,  28,  54,
@@ -113,7 +113,7 @@ namespace Axiom.src.core.Evaluation
              -1, -18,  -9,  10, -15, -25, -31, -50,
         };
 
-        private static readonly int[] eg_queen_table = 
+        private static readonly int[] eg_queen_table =
         {
              -9,  22,  22,  27,  27,  19,  10,  20,
             -17,  20,  32,  41,  58,  25,  30,   0,
@@ -125,7 +125,7 @@ namespace Axiom.src.core.Evaluation
             -33, -28, -22, -43,  -5, -32, -20, -41,
         };
 
-        private static readonly int[] mg_king_table = 
+        private static readonly int[] mg_king_table =
         {
             -65,  23,  16, -15, -56, -34,   2,  13,
              29,  -1, -20,  -7,  -8,  -4, -38, -29,
@@ -137,7 +137,7 @@ namespace Axiom.src.core.Evaluation
             -15,  36,  12, -54,   8, -28,  24,  14,
         };
 
-        private static readonly int[] eg_king_table = 
+        private static readonly int[] eg_king_table =
         {
             -74, -35, -18, -18, -11,  15,   4, -17,
             -12,  17,  14,  17,  17,  38,  23,  11,

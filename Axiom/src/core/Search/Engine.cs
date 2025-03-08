@@ -3,7 +3,6 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
-using System.Security;
 
 namespace Axiom.src.core.Search
 {
@@ -44,7 +43,7 @@ namespace Axiom.src.core.Search
             board = new Board.Board();
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
-            
+
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -178,8 +177,8 @@ namespace Axiom.src.core.Search
 
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
-            
-            
+
+
             int numLegalMoves = 0;
             int bestScore = NegativeInf;
             bool alphaWasRaised = false;

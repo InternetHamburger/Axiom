@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Axiom.src.core.Move_Generation
+﻿namespace Axiom.src.core.Move_Generation
 {
     public static class MoveGenConstants
     {

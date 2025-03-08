@@ -152,8 +152,8 @@ namespace Axiom.src.core.Utility
             {
                 EnPassantSquare = "-";
             }
-            
-            
+
+
             int absIndex = 0;
             int addIndex = 0;
             bool hasSeenPiece = false;

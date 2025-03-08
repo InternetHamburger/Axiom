@@ -93,11 +93,11 @@ namespace Axiom.src.core.Board
                 castlingRights &= GameState.ClearWhiteKingsideMask;
             }
             if (startSquare == 56 || targetSquare == 56) // a1
-            { 
+            {
                 castlingRights &= GameState.ClearWhiteQueensideMask;
             }
             if (startSquare == 7 || targetSquare == 7) // h8
-            { 
+            {
                 castlingRights &= GameState.ClearBlackKingsideMask;
             }
             if (startSquare == 0 || targetSquare == 0) // a8
@@ -354,7 +354,7 @@ namespace Axiom.src.core.Board
             {
                 ZobristHash ^= Zobrist.WhiteToMove;
             }
-            
+
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
                 Squares[squareIndex] = pos.Squares[squareIndex];
@@ -384,7 +384,7 @@ namespace Axiom.src.core.Board
             GameHistory.Push(CurrentGameState);
         }
 
-        public bool IsThreefoldRepetition() 
+        public bool IsThreefoldRepetition()
         {
             // Two-fold repetition
             if (RepetitionHistory.Count(pos => pos == ZobristHash) >= 2)
@@ -395,7 +395,7 @@ namespace Axiom.src.core.Board
             {
                 return false;
             }
-        } 
+        }
 
         public string Fen => FenUtility.GetFen(this);
 

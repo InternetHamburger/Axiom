@@ -63,7 +63,7 @@ namespace Axiom.src
 
         private void HandlePositionCommand(string input)
         {
-            
+
             string[] tokens = input.Split(' ');
             string fen = tokens[1] == "startpos" ? BoardUtility.StartPos : "";
 
@@ -116,7 +116,7 @@ namespace Axiom.src
                     {
                         depth = int.Parse(tokens[Array.IndexOf(tokens, "depth") + 1]);
                     }
-                    
+
 
                     engine.Search(depth, searchTime);
 
@@ -225,8 +225,8 @@ namespace Axiom.src
                     increment = int.Parse(tokens[Array.IndexOf(tokens, "binc") + 1]);
                 }
             }
-            
-            
+
+
             return GetSearchTime(timeLeft, increment);
         }
 

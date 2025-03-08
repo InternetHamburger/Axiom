@@ -1,5 +1,4 @@
-﻿using Axiom.src.core.Board;
-using Axiom.src.core.Utility;
+﻿using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Move_Generation
 {
@@ -24,7 +23,7 @@ namespace Axiom.src.core.Move_Generation
 
 
                 ulong knightBitboard = 0;
-               
+
                 foreach (int knightJumpDelta in allKnightJumps)
                 {
                     int knightJumpSquare = squareIndex + knightJumpDelta;

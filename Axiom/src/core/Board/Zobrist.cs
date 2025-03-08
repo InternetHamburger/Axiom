@@ -15,7 +15,7 @@
         public static readonly ulong[] CastlingRights = new ulong[16];
         public static readonly ulong[] EnPassantFiles = new ulong[8];
         public static readonly ulong WhiteToMove;
-        
+
 
         static Zobrist()
         {

@@ -82,7 +82,7 @@ namespace Axiom.src.core.Move_Generation
             }
         }
 
-        
+
         private static void GeneratePawnMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves)
         {
             if (board.WhiteToMove)
@@ -335,11 +335,11 @@ namespace Axiom.src.core.Move_Generation
             }
         }
 
-        
+
         private static void GenerateKingMoves(Board.Board board, ref Move[] moves, ref int numGeneratedMoves, int square)
         {
             ulong possibleMoves = PreComputedMoveData.KingAttacks[square];
-            
+
             possibleMoves &= ~(board.WhiteToMove ? board.WhitePieceBitBoard : board.BlackPieceBitBoard);
 
             while (possibleMoves != 0)
