@@ -247,7 +247,7 @@ namespace Axiom.src.core.Search
                 }
                 else
                 {
-                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -alpha - 1, -alpha);
+                    score = -NegaMax(depth - 2 + extension, plyFromRoot + 1, -alpha - 1, -alpha);
                     if (score > alpha)
                     {
                         score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
