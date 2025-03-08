@@ -223,17 +223,17 @@ namespace Axiom.src.core.Search
 
                 numLegalMoves++;
                 int score = 0;
-
+                int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
                 {
-                    score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
+                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
                 }
                 else
                 {
-                    score = -NegaMax(depth - 1, plyFromRoot + 1, -alpha - 1, -alpha);
+                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -alpha - 1, -alpha);
                     if (score > alpha)
                     {
-                        score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
+                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
                     }
                 }
 
