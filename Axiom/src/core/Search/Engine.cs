@@ -31,6 +31,7 @@ namespace Axiom.src.core.Search
 
         public double startTime;
         public double timeLimit;
+        public int NodeLimit;
 
         public TTEntry[] TT;
         public MoveOrderer moveOrderer;
@@ -53,11 +54,11 @@ namespace Axiom.src.core.Search
             InitSearch();
         }
 
-        public void Search(int depthlimit, int timelimit = int.MaxValue)
+        public void Search(int depthlimit, int timelimit = int.MaxValue, int nodeLimit = int.MaxValue)
         {
             InitSearch();
             timeLimit = timelimit;
-
+            NodeLimit = nodeLimit;
 
 
             int alpha;
@@ -110,7 +111,7 @@ namespace Axiom.src.core.Search
                 }
 
 
-                if (IsTimeUp)
+                if (IsTimeUp || SearchedNodes >= NodeLimit)
                 {
                     return;
                 }
@@ -256,7 +257,7 @@ namespace Axiom.src.core.Search
 
                 board.UndoMove(move);
 
-                if (IsTimeUp)
+                if (IsTimeUp || SearchedNodes >= NodeLimit)
                 {
                     return 0;
                 }

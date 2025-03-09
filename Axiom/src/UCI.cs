@@ -109,6 +109,12 @@ namespace Axiom.src
 
                     Perft.PerftSearch(engine.board, depth);
                     break;
+                case "nodes":
+                    int nodes = int.Parse(input.Split(' ')[2]);
+
+                    engine.Search(256, int.MaxValue, nodes);
+                    Console.WriteLine("bestmove " + BoardUtility.MoveToUci(engine.bestMoveThisIteration));
+                    break;
                 default:
                     int searchTime = ExtractMoveTime(tokens);
                     depth = 256;
