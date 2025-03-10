@@ -21,8 +21,6 @@ namespace Axiom.src.core.Search
         public const int TotalPhase = 24;
 
         public int SearchedNodes;
-        public int betaCutoffs;
-        public int firstMoveBetaCutoffs;
         public Move bestMoveThisIteration;
         public Move currentBestMove;
         public int eval;
@@ -240,7 +238,7 @@ namespace Axiom.src.core.Search
                 }
 
                 numLegalMoves++;
-                int score = 0;
+                int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
                 {
@@ -281,15 +279,6 @@ namespace Axiom.src.core.Search
 
                 if (beta <= alpha)
                 {
-                    if (i == 0)
-                    {
-                        betaCutoffs++;
-                        firstMoveBetaCutoffs++;
-                    }
-                    else
-                    {
-                        betaCutoffs++;
-                    }
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
