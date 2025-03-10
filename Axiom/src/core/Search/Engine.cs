@@ -227,7 +227,7 @@ namespace Axiom.src.core.Search
                             break;
                     }
                 }
-
+                bool isCapture = board.Squares[move.TargetSquare] != 0;
                 board.MakeMove(move);
 
                 // Filter illegal moves
@@ -246,10 +246,11 @@ namespace Axiom.src.core.Search
                 }
                 else
                 {
-                    score = -NegaMax(depth - 2 + extension, plyFromRoot + 1, -alpha - 1, -alpha);
+                    int reduction = (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove)) ? 1 : 0;
+                    score = -NegaMax(depth - 2 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha);
                     if (score > alpha)
                     {
-                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                        score = -NegaMax(depth - 1 - reduction+ extension, plyFromRoot + 1, -beta, -alpha);
                     }
                 }
 
