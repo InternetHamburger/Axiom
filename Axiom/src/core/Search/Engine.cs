@@ -403,7 +403,7 @@ namespace Axiom.src.core.Search
                 int index = (int)(hash % numTTEntries);
                 TTEntry entry = TT[index];
 
-                if (entry.ZobristHash != hash || entry.BestMove == 0)
+                if (entry.ZobristHash != hash || entry.BestMove == 0 || board.IsTwofoldRepetition())
                     break; // Stop if no valid move is found in the TT
 
                 string moveUci = BoardUtility.MoveToUci(new Move(entry.BestMove));

@@ -431,6 +431,19 @@ namespace Axiom.src.core.Board
             }
         }
 
+        public bool IsTwofoldRepetition()
+        {
+            // Two-fold repetition
+            if (RepetitionHistory.Count(pos => pos == ZobristHash) >= 1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public bool InEndgame(int GamePhase) => GamePhase > 200;
 
         public string Fen => FenUtility.GetFen(this);
