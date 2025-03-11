@@ -170,7 +170,7 @@ namespace Axiom.src.core.Search
             // Not in root node
             if (plyFromRoot > 0)
             {
-                if (board.IsThreefoldRepetition())
+                if (board.IsTwofoldRepetition())
                 {
                     return 0;
                 }
