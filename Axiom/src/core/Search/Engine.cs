@@ -26,6 +26,7 @@ namespace Axiom.src.core.Search
         public int eval;
         public int currentEval;
         public int maxDepth;
+        public bool printInfo;
 
         public double startTime;
         public double timeLimit;
@@ -42,7 +43,7 @@ namespace Axiom.src.core.Search
             board = new Board.Board();
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
-
+            printInfo = true;
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -115,7 +116,7 @@ namespace Axiom.src.core.Search
                 }
                 bestMoveThisIteration = currentBestMove;
                 eval = currentEval;
-                Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()}");
+                if (printInfo) Console.WriteLine($"info depth {depth} score {UCI.GetCorrectEval(eval)} nodes {SearchedNodes} nps {SearchedNodes / Math.Max(1, watch.ElapsedMilliseconds) * 1000} time {watch.ElapsedMilliseconds} pv {GetPv()}");
             }
             watch.Stop();
         }

@@ -50,6 +50,17 @@ namespace Axiom.src
                     engine.CalculateGamePhase();
                     Console.WriteLine(Evaluator.Evaluate(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
                     break;
+                case "bench":
+                    string[] tokens = input.Split(' ');
+                    if (tokens.Length > 1 && int.TryParse(tokens[1], out int depth))
+                    {
+                        Bench.RunSuite(depth);
+                    }
+                    else
+                    {
+                        Bench.RunSuite();
+                    }
+                    break;
                 default:
                     Console.WriteLine("Unknown message");
                     break;
