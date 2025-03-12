@@ -340,7 +340,7 @@ namespace Axiom.src.core.Search
             {
                 return standingPat;
             }
-
+            int bestScore = standingPat;
             foreach (Move move in captureMoves)
             {
                 // No need to filter illegal castling moves
@@ -362,13 +362,17 @@ namespace Axiom.src.core.Search
                 {
                     return score;
                 }
-                if (score > alpha)
+                if (score > bestScore)
                 {
-                    alpha = score;
+                    bestScore = score;
+                    if (score > alpha)
+                    {
+                        alpha = score;
+                    }
                 }
             }
 
-            return alpha;
+            return bestScore;
         }
 
         static int PhaseScore(byte piece)
