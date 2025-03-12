@@ -6,17 +6,20 @@ namespace Axiom.src.core.Move_Generation
     {
         public static readonly ulong[] KnightAttacks;
         public static readonly ulong[] KingAttacks;
+        public static readonly int[] DstFromCenter;
 
         static PreComputedMoveData()
         {
             KnightAttacks = new ulong[64];
             KingAttacks = new ulong[64];
+            DstFromCenter = new int[64];
 
             int[] allKnightJumps = { 15, 17, -17, -15, 10, -6, 6, -10 };
 
 
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
+                DstFromCenter[squareIndex] = GetDstFromCenter(squareIndex);
                 int rank = BoardUtility.Rank(squareIndex);
                 int file = squareIndex - rank * 8;
 
@@ -32,7 +35,7 @@ namespace Axiom.src.core.Move_Generation
                         int knightSquareRank = BoardUtility.Rank(knightJumpSquare);
                         int knightSquareFile = knightJumpSquare - knightSquareRank * 8;
                         // Ensure knight has moved max of 2 squares on x/y axis (to reject indices that have wrapped around side of board)
-                        int maxCoordMoveDst = System.Math.Max(System.Math.Abs(file - knightSquareFile), System.Math.Abs(rank - knightSquareRank));
+                        int maxCoordMoveDst = Math.Max(Math.Abs(file - knightSquareFile), Math.Abs(rank - knightSquareRank));
                         if (maxCoordMoveDst == 2)
                         {
                             knightBitboard |= 1ul << knightJumpSquare;
@@ -70,6 +73,20 @@ namespace Axiom.src.core.Move_Generation
             }
 
             return attacks;
+        }
+
+        static int GetDstFromCenter(int square)
+        {
+            int file = BoardUtility.File(square);
+            int rank = BoardUtility.Rank(square);
+
+            int dstToCentreFile = Math.Max(3 - file, file - 4);
+            int dstToCentreRank = Math.Max(3 - rank, rank - 4);
+            int dstToCentre = dstToCentreFile + dstToCentreRank;
+
+            return dstToCentre;
+
+
         }
 
     }

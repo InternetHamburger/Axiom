@@ -1,4 +1,6 @@
 ﻿using Axiom.src;
+using Axiom.src.core.Board;
+using Axiom.src.core.Utility;
 
 namespace Axiom
 {

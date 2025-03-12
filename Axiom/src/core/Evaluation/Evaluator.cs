@@ -1,4 +1,5 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Evaluation
@@ -200,10 +201,12 @@ namespace Axiom.src.core.Evaluation
                 MGeval += MGmaterialValue(board.Squares[i], i);
                 EGeval += EGmaterialValue(board.Squares[i], i);
             }
-
+            MGeval *= board.WhiteToMove ? 1 : -1;
+            EGeval *= board.WhiteToMove ? 1 : -1;
+            EGeval += 4 * PreComputedMoveData.DstFromCenter[board.KingSquares[board.WhiteToMove ? 1 : 0]];
             int eval = (MGeval * (256 - GamePhase) + EGeval * GamePhase) / 256;
 
-            return eval * (board.WhiteToMove ? 1 : -1);
+            return eval;
         }
 
         public static int MGmaterialValue(byte piece, int square)
