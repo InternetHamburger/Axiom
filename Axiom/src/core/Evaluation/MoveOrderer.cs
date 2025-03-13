@@ -55,7 +55,7 @@ namespace Axiom.src.core.Evaluation
             }
             else if (Move.SameMove(move, killerMove))
             {
-                return 9999;
+                return 1;
             }
             if (board.Squares[move.TargetSquare] != 0)
             {
