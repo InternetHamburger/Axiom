@@ -31,7 +31,7 @@ namespace Axiom.src.core.Evaluation
 
         static int CaptureScoreDelta(Move move, Board.Board board)
         {
-            return 100 * MoveOrderPieceValue(board.Squares[move.TargetSquare]) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
+            return 1000 + MoveOrderPieceValue(board.Squares[move.TargetSquare]) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
         }
 
         static int MoveOrderPieceValue(byte piece)
@@ -55,7 +55,7 @@ namespace Axiom.src.core.Evaluation
             }
             else if (Move.SameMove(move, killerMove))
             {
-                return 9999;
+                return 1001;
             }
             if (board.Squares[move.TargetSquare] != 0)
             {

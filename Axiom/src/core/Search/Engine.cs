@@ -285,9 +285,6 @@ namespace Axiom.src.core.Search
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
-                    }
-                    else
-                    {
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
                     TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
