@@ -34,6 +34,7 @@ namespace Axiom.src.core.Search
 
         public TTEntry[] TT;
         public MoveOrderer moveOrderer;
+        public Evaluator evaluator;
 
 
         public Board.Board board;
@@ -44,7 +45,7 @@ namespace Axiom.src.core.Search
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
             printInfo = true;
-            NegaMax(1, 0, NegativeInf, PositiveInf);
+            evaluator = new();
         }
 
         public void SetPosition(string fen)
@@ -239,6 +240,8 @@ namespace Axiom.src.core.Search
                     continue;
                 }
 
+                
+
                 numLegalMoves++;
                 int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
@@ -322,7 +325,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board, GamePhase);
+            int standingPat = evaluator.EvaluateNN(board);
 
             if (standingPat >= beta)
             {

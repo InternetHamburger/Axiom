@@ -1,4 +1,5 @@
 ﻿using Nerual_Network.Setup;
+using System.Numerics;
 
 namespace Nerual_Network
 {
@@ -6,9 +7,9 @@ namespace Nerual_Network
     {
         public static double[] MatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
-
             double[] vectorProduct = new double[matrix[0].Length];
-            for (int i = 0; i < matrix.Count(); i++)
+            int count = matrix.Count();
+            for (int i = 0; i < count; i++)
             {
                 double[] T = VectorScaling(matrix[i], vector[i]);
                 

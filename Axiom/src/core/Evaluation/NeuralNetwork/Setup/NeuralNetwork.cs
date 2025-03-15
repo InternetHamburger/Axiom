@@ -2,9 +2,9 @@
 
 namespace Nerual_Network.Setup
 {
-    class NeuralNetwork
+    public class NeuralNetwork
     {
-        public Layer[] Layers;
+        private Layer[] Layers;
         public int inputSize;
         public int outputSize;
         public NeuralNetwork(params int[] layerSizes)
@@ -18,14 +18,6 @@ namespace Nerual_Network.Setup
             outputSize = layerSizes[^1];
         }
 
-        public void RandomizeInitial()
-        {
-            for (int i = 0; i < Layers.Length; i++)
-            {
-                Layers[i].Randomize();
-            }
-        }
-
         public static double ActivationFunction(double x)
         {
             return Math.Pow(Math.Clamp(x, 0, 1), 2);
@@ -33,20 +25,12 @@ namespace Nerual_Network.Setup
             return 1 / (1 + Math.Exp(-x));
         }
 
-        public static double ActivationDerivative(double x)
-        {
-            return (x < 0 | x > 1) ? 0 : (2 * x);
-            return x < 0 ? 0.01 : 1;
-            double exp = Math.Exp(-x);
-            return exp / Math.Pow(1 + exp, 2);
-        }
-
         public static double InverseSigmoid(double x)
         {
             return 400 * Math.Log10(x / (1 - x));
         }
 
-        public double GetOutput(double[] input)
+        public double GetOutput(double[] input, bool WhiteToMove)
         {
             double[] layerFeed = input;
 
@@ -54,7 +38,7 @@ namespace Nerual_Network.Setup
             {
                 layerFeed = FeedSingleLayer(i, layerFeed, i == Layers.Length - 1);
             }
-            return layerFeed[0];
+            return InverseSigmoid(Math.Clamp(layerFeed[0], 0, 1)) * (WhiteToMove ? 1 : -1);
         }
 
 
