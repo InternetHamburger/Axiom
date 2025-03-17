@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Nerual_Network.Setup
 {
@@ -44,11 +45,17 @@ namespace Nerual_Network.Setup
 
         private double[] FeedSingleLayer(int index, double[] inputs, bool isLastLayer)
         {
-            
-
             Layers[index].Inputs = inputs;
             double[] output = new double[Layers[index].layerSize];
-            output = MatrixHelper.MatrixVectorMultiplication(Layers[index].WeightMatrix, inputs);
+            if (!isLastLayer)
+            {
+                output = MatrixHelper.InputMatrixVectorMultiplication(Layers[index].WeightMatrix, inputs);
+            }
+            else
+            {
+                output = MatrixHelper.MatrixVectorMultiplication(Layers[index].WeightMatrix, inputs);
+            }
+            
             MatrixHelper.VectorAddition(output, Layers[index].BiasVector);
             if (!isLastLayer)
             {
@@ -65,7 +72,7 @@ namespace Nerual_Network.Setup
             }
 
             string jsonString = File.ReadAllText(filePath);
-            var networkData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString);
+            var networkData = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonString);
 
             if (networkData == null || networkData.Count != Layers.Length)
             {
@@ -74,12 +81,10 @@ namespace Nerual_Network.Setup
 
             for (int i = 0; i < Layers.Length; i++)
             {
-                // Deserialize the weight matrix (jagged array)
-                var weightList = JsonSerializer.Deserialize<List<List<double>>>(networkData[i]["Weights"].ToString());
+                var weightList = JsonConvert.DeserializeObject<List<List<double>>>(networkData[i]["Weights"].ToString());
                 Layers[i].WeightMatrix = weightList.Select(row => row.ToArray()).ToArray();
 
-                // Deserialize the bias vector (1D array)
-                Layers[i].BiasVector = JsonSerializer.Deserialize<double[]>(networkData[i]["Biases"].ToString());
+                Layers[i].BiasVector = JsonConvert.DeserializeObject<double[]>(networkData[i]["Biases"].ToString());
             }
         }
     }
