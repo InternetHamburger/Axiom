@@ -175,12 +175,18 @@ namespace Axiom.src.core.Search
                     return 0;
                 }
             }
-
+            bool InCheck = board.IsInCheck(board.WhiteToMove);
+            int eval = Evaluator.Evaluate(board, GamePhase);
+            int margin = 150 * depth; // e.g. 150 * depth
+            if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && eval >= beta + margin)
+            {   
+                return eval; // fail soft
+            }
             // Null Move Pruning
             const int NULL_MOVE_MIN_DEPTH = 3;
             const int R = 2; // Reduction factor for null move pruning
 
-            if (depth >= NULL_MOVE_MIN_DEPTH && !board.IsInCheck(board.WhiteToMove) && !board.InEndgame(GamePhase))
+            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase))
             {
                 board.MakeNullMove();
                 int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
