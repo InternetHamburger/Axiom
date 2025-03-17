@@ -284,14 +284,20 @@ namespace Axiom.src.core.Search
                 {
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
+
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
-                        moveOrderer.KillerMoves[plyFromRoot] = move;
+                        bool moveInList = false;
+                        moveInList |= Move.SameMove(moveOrderer.KillerMoves[plyFromRoot, 0], move);
+                        moveInList |= Move.SameMove(moveOrderer.KillerMoves[plyFromRoot, 1], move);
+
+                        if (!moveInList)
+                        {
+                            moveOrderer.KillerMoves[plyFromRoot, 1] = moveOrderer.KillerMoves[plyFromRoot, 0];
+                            moveOrderer.KillerMoves[plyFromRoot, 0] = move;
+                        }
                     }
-                    else
-                    {
-                        
-                    }
-                        TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
+
+                    TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return bestScore; // Return beta on cutoff
                 }
             }

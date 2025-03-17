@@ -5,23 +5,23 @@ namespace Axiom.src.core.Evaluation
     public class MoveOrderer
     {
         public int[,,] HistoryTable;
-        public Move[] KillerMoves;
+        public Move[,] KillerMoves;
 
         public MoveOrderer()
         {
             HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
-            KillerMoves = new Move[256];
+            KillerMoves = new Move[256, 2];
         }
 
         public void Init()
         {
             HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
-            KillerMoves = new Move[256];
+            KillerMoves = new Move[256, 2];
         }
 
         public void OrderMoves(Move[] moves, Board.Board board, Move ttMove, int plyFromRoot)
         {
-            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, KillerMoves[plyFromRoot]).CompareTo(MoveScore(a, board, ttMove, KillerMoves[plyFromRoot])));
+            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, plyFromRoot).CompareTo(MoveScore(a, board, ttMove, plyFromRoot)));
         }
 
         public void OrderCaptures(Move[] moves, Board.Board board)
@@ -47,13 +47,17 @@ namespace Axiom.src.core.Evaluation
             };
         }
 
-        int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
+        int MoveScore(Move move, Board.Board board, Move ttMove, int plyFromRoot)
         {
             if (Move.SameMove(ttMove, move))
             {
                 return 10000;
             }
-            else if (Move.SameMove(move, killerMove))
+            else if (Move.SameMove(move, KillerMoves[plyFromRoot, 1]))
+            {
+                return 1;
+            }
+            else if (Move.SameMove(move, KillerMoves[plyFromRoot, 0]))
             {
                 return 1;
             }
