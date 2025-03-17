@@ -157,7 +157,7 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return beta; // Cutoff with the lower bound score
+                    return alpha; // Cutoff with the lower bound score
                 }
             }
 
