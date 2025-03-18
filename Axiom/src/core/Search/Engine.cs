@@ -251,13 +251,14 @@ namespace Axiom.src.core.Search
                 numLegalMoves++;
 
 
-                // Futility pruning
-                if (depth == 1 && staticEval <= alpha - 300 && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
+                int futilitymargin = 200 * depth; // Dynamic futility margin
+
+                // Futility pruning: skip moves unlikely to raise alpha
+                if (depth <= 3 && staticEval + futilitymargin <= alpha && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
                 {
                     board.UndoMove(move);
                     continue;
                 }
-
                 int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
