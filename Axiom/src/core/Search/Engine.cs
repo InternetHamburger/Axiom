@@ -2,6 +2,7 @@
 using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Axiom.src.core.Search
@@ -176,11 +177,11 @@ namespace Axiom.src.core.Search
                 }
             }
             bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int eval = Evaluator.Evaluate(board, GamePhase);
+            int staticEval = Evaluator.Evaluate(board, GamePhase);
             int margin = 150 * depth; // e.g. 150 * depth
-            if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && eval >= beta + margin)
+            if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
             {   
-                return eval; // fail soft
+                return staticEval; // fail soft
             }
             // Null Move Pruning
             const int NULL_MOVE_MIN_DEPTH = 3;
@@ -209,7 +210,7 @@ namespace Axiom.src.core.Search
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
-
+                
 
                 // Filter illegal castling moves
                 if (move.MoveFlag == Move.CastleFlag)
@@ -245,7 +246,18 @@ namespace Axiom.src.core.Search
                     continue;
                 }
 
+
+
                 numLegalMoves++;
+
+
+                // Futility pruning
+                if (depth == 1 && staticEval <= alpha - 300 && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
+                {
+                    board.UndoMove(move);
+                    continue;
+                }
+
                 int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
