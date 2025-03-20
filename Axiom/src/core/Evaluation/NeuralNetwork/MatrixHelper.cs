@@ -5,36 +5,64 @@ namespace Nerual_Network
 {
     static class MatrixHelper
     {
+        //public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
+        //{
+        //    double[] vectorProduct = new double[matrix[0].Length];
+        //    int count = matrix.Count();
+        //    for (int i = 0; i < count; i++)
+        //    {
+        //        if (vector[i] == 0)
+        //        {
+        //            continue;
+        //        }
+        //        else
+        //        {
+        //            VectorAddition(vectorProduct, matrix[i]);
+        //        }
+        //    }
+        //    return vectorProduct;
+        //}
         public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
-            double[] vectorProduct = new double[matrix[0].Length];
-            int count = matrix.Count();
-            for (int i = 0; i < count; i++)
+            int rows = matrix.Length;
+            int cols = matrix[0].Length;
+
+
+            double[] result = new double[rows];
+
+            for (int j = 0; j < rows; j++)
             {
-                if (vector[i] == 0)
+                if (vector[j] == 1)
                 {
-                    continue;
+                    VectorAddition(result, matrix[j]);
                 }
-                else
-                {
-                    VectorAddition(vectorProduct, matrix[i]);
-                }
+            }
+            return result;
+        }
+        public static double[] MatrixVectorMultiplication(double[][] matrix, double[] vector)
+        {
+
+            double[] vectorProduct = new double[matrix[0].Length];
+            for (int i = 0; i < matrix.Count(); i++)
+            {
+                double[] T = VectorScaling(matrix[i], vector[i]);
+
+                VectorAddition(vectorProduct, T);
             }
             return vectorProduct;
         }
 
-
-        public static double[] MatrixVectorMultiplication(double[][] matrix, double[] vector)
+        public static double OutputMatrixVectorMultiplication(double[] matrix, double[] vector)
         {
-            double[] vectorProduct = new double[matrix[0].Length];
+            double product = 0;
             int count = matrix.Count();
+
             for (int i = 0; i < count; i++)
             {
-                double[] T = VectorScaling(matrix[i], vector[i]);
-                
-                VectorAddition(vectorProduct, T);
+                product += matrix[i] * vector[i];
             }
-            return vectorProduct;
+            
+            return product;
         }
 
         public static double[] VectorScaling(double[] vector, double scalar)

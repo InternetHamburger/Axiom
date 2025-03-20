@@ -196,8 +196,8 @@ namespace Axiom.src.core.Evaluation
 
         public Evaluator()
         {
-            nn = new(768, 128, 1);
-            nn.LoadFromFile("C:/c/raw.bin", 128);
+            nn = new(768, 256);
+            nn.LoadFromFile("C:/c/raw.bin", 256);
         }
 
         public static int EvaluateStatic(Board.Board board, int GamePhase)
@@ -220,6 +220,7 @@ namespace Axiom.src.core.Evaluation
         public int EvaluateNN(Board.Board board)
         {
             double[] inputs = FenUtlity.FenToArray(board.Fen.Split(' ')[0]);
+            if (!board.WhiteToMove) Array.Reverse(inputs);
             return (int)nn.GetOutput(inputs, board.WhiteToMove);
         }
 
