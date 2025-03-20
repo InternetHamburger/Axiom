@@ -196,8 +196,8 @@ namespace Axiom.src.core.Evaluation
 
         public Evaluator()
         {
-            nn = new(768, 32, 1);
-            nn.LoadFromFile("C:/c/(768-64-1)nn7.json");
+            nn = new(768, 128, 1);
+            nn.LoadFromFile("C:/c/raw.bin", 128);
         }
 
         public static int EvaluateStatic(Board.Board board, int GamePhase)

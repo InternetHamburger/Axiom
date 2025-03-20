@@ -10,7 +10,7 @@ namespace Nerual_Network.Setup
         public int layerSize;
         public int inputSize;
 
-        public Layer(int inputSize, int layerSize)
+        public Layer(int inputSize, int layerSize, bool isHiddenLayer)
         {
             this.layerSize = layerSize;
             this.inputSize = inputSize;
@@ -23,22 +23,7 @@ namespace Nerual_Network.Setup
             }
 
             Inputs = new double[inputSize];
-            BiasVector = new double[layerSize];
-        }
-
-        
-
-        public void Randomize()
-        {
-            var r = new Random(96);
-            for (int i = 0; i < layerSize; i++)
-            {
-                for (int j = 0; j < inputSize; j++)
-                {
-                    WeightMatrix[j][i] = r.NextDouble() * 4 - 2;
-                }
-                BiasVector[i] = r.NextDouble() * 4 - 2;
-            }
+            BiasVector = new double[layerSize * (isHiddenLayer ? 2 : 1)];
         }
     }
 }

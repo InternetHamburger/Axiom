@@ -13,7 +13,7 @@ namespace Nerual_Network.Setup
             Layers = new Layer[layerSizes.Length - 1];
             for (int i = 1; i < layerSizes.Length; i++)
             {
-                Layers[i - 1] = new Layer(layerSizes[i - 1], layerSizes[i]);
+                Layers[i - 1] = new Layer(layerSizes[i - 1], layerSizes[i], i==1);
             }
             inputSize = layerSizes[0];
             outputSize = layerSizes[^1];
@@ -64,28 +64,40 @@ namespace Nerual_Network.Setup
             return output;
         }
 
-        public void LoadFromFile(string filePath)
+        public void LoadFromFile(string filePath, int hlSize)
         {
+            
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("The specified file does not exist.");
             }
 
-            string jsonString = File.ReadAllText(filePath);
-            var networkData = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonString);
+            byte[] bytes = File.ReadAllBytes(filePath);
 
-            if (networkData == null || networkData.Count != Layers.Length)
+            int floatCount = bytes.Length / 4;
+            float[] floats = new float[floatCount];
+
+            // Load the weights and biases
+            for (int i = 0; i < floatCount; i++)
             {
-                throw new Exception("Invalid network data format.");
+                floats[i] = BitConverter.ToSingle(bytes, i * 4);
             }
-
-            for (int i = 0; i < Layers.Length; i++)
+            for (int i = 0; i < inputSize; i++)
             {
-                var weightList = JsonConvert.DeserializeObject<List<List<double>>>(networkData[i]["Weights"].ToString());
-                Layers[i].WeightMatrix = weightList.Select(row => row.ToArray()).ToArray();
-
-                Layers[i].BiasVector = JsonConvert.DeserializeObject<double[]>(networkData[i]["Biases"].ToString());
+                for (int j = 0; j < hlSize; j++) 
+                {
+                    Layers[0].WeightMatrix[i][j] = (double)floats[hlSize * i + j];
+                }
             }
+            for (int i = 0; i < 2 * hlSize; i++)
+            {
+                Layers[0].BiasVector[i] = (double)floats[inputSize * hlSize + i];
+            }
+            for (int i = 0; i < hlSize; i++)
+            {
+                Layers[1].WeightMatrix[i][0] = (double)floats[(inputSize + 2) * hlSize + i];
+            }
+            Layers[1].BiasVector[0] = (double)floats[(inputSize + 3) * hlSize];
         }
     }
 }
