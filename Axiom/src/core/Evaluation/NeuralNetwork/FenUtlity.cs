@@ -1,4 +1,5 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +50,8 @@ namespace Nerual_Network.Chess
             double[] nnInput = new double[64 * 6 * 2];
             for (int i = 0; i < 64; i++)
             {
-                byte piece = squarePieces[i];
+                int j = BoardUtility.FlipSquare(i);
+                byte piece = squarePieces[j];
                 if (piece != 0)
                 {
                     if (piece > Piece.WhiteKing) piece -= 2;

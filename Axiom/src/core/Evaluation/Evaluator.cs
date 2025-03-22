@@ -196,8 +196,8 @@ namespace Axiom.src.core.Evaluation
 
         public Evaluator()
         {
-            nn = new(768, 256);
-            nn.LoadFromFile("C:/c/raw.bin", 256);
+            nn = new(768, 64);
+            nn.LoadFromFile("C:/c/beans.bin", 64);
         }
 
         public static int EvaluateStatic(Board.Board board, int GamePhase)

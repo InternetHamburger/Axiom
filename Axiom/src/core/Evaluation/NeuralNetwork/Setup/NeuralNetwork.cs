@@ -12,6 +12,8 @@ namespace Nerual_Network.Setup
         public int hlSize;
         public const int outputSize = 1;
         public const int EvalScale = 400;
+        public const int QA = 255;
+        public const int QB = 64;
 
         public double[][] HlWeightMatrix;
         public double[] HlBiasVector;
@@ -21,10 +23,10 @@ namespace Nerual_Network.Setup
         public double OutputBias;
         public NeuralNetwork(int inputSize, int hlSize)
         {
-            HlWeightMatrix = new double[hlSize][];
-            for (int i = 0; i < hlSize; i++)
+            HlWeightMatrix = new double[inputSize][];
+            for (int i = 0; i < inputSize; i++)
             {
-                HlWeightMatrix[i] = new double[inputSize];
+                HlWeightMatrix[i] = new double[hlSize];
             }
             HlBiasVector = new double[hlSize];
 
@@ -37,25 +39,22 @@ namespace Nerual_Network.Setup
 
         public static double ActivationFunction(double x)
         {
-            return Math.Pow(Math.Clamp(x, 0, 1), 1);
+            return Math.Pow(Math.Clamp(x, 0, QA), 2);
             return Math.Max(x, 0.01 * x);
             return 1 / (1 + Math.Exp(-x));
         }
 
         public double GetOutput(double[] input, bool WhiteToMove)
         {
+            double[] accumulator = MatrixHelper.MatrixVectorMultiplication(HlWeightMatrix, input);
+            MatrixHelper.VectorAddition(accumulator, HlBiasVector);
+            MatrixHelper.ApplyActivationFunction(accumulator);
 
-            double[] usAccumulator = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, input);
-            double[] themAccumulator = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, input);
-            MatrixHelper.VectorAddition(usAccumulator, HlBiasVector);
-            MatrixHelper.VectorAddition(themAccumulator, HlBiasVector);
-            MatrixHelper.ApplyActivationFunction(usAccumulator);
-            MatrixHelper.ApplyActivationFunction(themAccumulator);
 
-            double output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, usAccumulator);
-            output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, themAccumulator);
+            double output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulator);
+            output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulator);
             output += OutputBias;
-            return (WhiteToMove ? 1 : -1) * output * EvalScale;
+            return output;
         }
 
         public void LoadFromFile(string filePath, int hlSize)
@@ -68,34 +67,33 @@ namespace Nerual_Network.Setup
 
             byte[] bytes = File.ReadAllBytes(filePath);
 
-            int floatCount = bytes.Length / 4;
-            float[] floats = new float[floatCount];
-            
+            int floatCount = bytes.Length / 2;
+            short[] weights = new short[floatCount];
             // Load the weights and biases
             for (int i = 0; i < floatCount; i++)
             {
-                floats[i] = BitConverter.ToSingle(bytes, i * 4);
+                weights[i] = BitConverter.ToInt16(bytes, i * 2);
             }
             for (int i = 0; i < inputSize; i++)
             {
                 for (int j = 0; j < hlSize; j++) 
                 {
-                    HlWeightMatrix[j][i] = (double)floats[hlSize * i + j];
+                    HlWeightMatrix[i][j] = (double)weights[hlSize * i + j];
                 }
             }
             for (int i = 0; i < hlSize; i++)
             {
-                HlBiasVector[i] = (double)floats[inputSize * hlSize + i];
+                HlBiasVector[i] = (double)weights[inputSize * hlSize + i];
             }
             for (int i = 0; i < hlSize; i++)
             {
-                OutputWeightVectorUs[i] = (double)floats[(inputSize + 1) * hlSize + i];
+                OutputWeightVectorUs[i] = (double)weights[(inputSize + 1) * hlSize + i];
             }
             for (int i = 0; i < hlSize; i++)
             {
-                OutputWeightVectorThem[i] = (double)floats[(inputSize + 2) * hlSize + i];
+                OutputWeightVectorThem[i] = (double)weights[(inputSize + 2) * hlSize + i];
             }
-            OutputBias = (double)floats[(inputSize + 3) * hlSize];
+            OutputBias = (double)weights[(inputSize + 3) * hlSize];
         }
     }
 }

@@ -5,40 +5,40 @@ namespace Nerual_Network
 {
     static class MatrixHelper
     {
-        //public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
-        //{
-        //    double[] vectorProduct = new double[matrix[0].Length];
-        //    int count = matrix.Count();
-        //    for (int i = 0; i < count; i++)
-        //    {
-        //        if (vector[i] == 0)
-        //        {
-        //            continue;
-        //        }
-        //        else
-        //        {
-        //            VectorAddition(vectorProduct, matrix[i]);
-        //        }
-        //    }
-        //    return vectorProduct;
-        //}
         public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
-            int rows = matrix.Length;
-            int cols = matrix[0].Length;
-
-
-            double[] result = new double[rows];
-
-            for (int j = 0; j < rows; j++)
+            double[] vectorProduct = new double[matrix.Length];
+            int count = matrix.Count();
+            for (int i = 0; i < count; i++)
             {
-                if (vector[j] == 1)
+                if (vector[i] == 0)
                 {
-                    VectorAddition(result, matrix[j]);
+                    continue;
+                }
+                else
+                {
+                    VectorAddition(vectorProduct, matrix[i]);
                 }
             }
-            return result;
+            return vectorProduct;
         }
+        //public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
+        //{
+        //    int rows = matrix.Length;
+        //    int cols = matrix[0].Length;
+
+
+        //    double[] result = new double[rows];
+
+        //    for (int j = 0; j < rows; j++)
+        //    {
+        //        if (vector[j] == 1)
+        //        {
+        //            VectorAddition(result, matrix[j]);
+        //        }
+        //    }
+        //    return result;
+        //}
         public static double[] MatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
 
@@ -46,7 +46,6 @@ namespace Nerual_Network
             for (int i = 0; i < matrix.Count(); i++)
             {
                 double[] T = VectorScaling(matrix[i], vector[i]);
-
                 VectorAddition(vectorProduct, T);
             }
             return vectorProduct;
