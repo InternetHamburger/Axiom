@@ -1,6 +1,9 @@
 ﻿using Axiom.src;
 using Axiom.src.core.Board;
-using Axiom.src.core.Utility;
+using Axiom.src.core.Perft;
+using Nerual_Network.Chess;
+using Nerual_Network.Setup;
+using System.Numerics;
 
 namespace Axiom
 {
@@ -9,7 +12,7 @@ namespace Axiom
         static void Main()
         {
             UCI uci = new();
-
+            
             string? message = Console.ReadLine();
 
             while (message != "quit")

@@ -3,6 +3,8 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Perft;
 using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
+using Nerual_Network.Chess;
+using Nerual_Network.Setup;
 using System.Collections.Immutable;
 
 namespace Axiom.src
@@ -48,7 +50,10 @@ namespace Axiom.src
                     break;
                 case "eval":
                     engine.CalculateGamePhase();
-                    Console.WriteLine(Evaluator.Evaluate(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
+                    Console.WriteLine(Evaluator.EvaluateStatic(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
+                    break;
+                case "nneval":
+                    Console.WriteLine(engine.evaluator.EvaluateNN(engine.board));
                     break;
                 case "bench":
                     string[] tokens = input.Split(' ');

@@ -1,10 +1,12 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
+using Nerual_Network.Chess;
+using Nerual_Network.Setup;
 
 namespace Axiom.src.core.Evaluation
 {
-    static class Evaluator
+    public class Evaluator
     {
         private static readonly int[] mg_pawn_table =
         {
@@ -153,7 +155,7 @@ namespace Axiom.src.core.Evaluation
 
         public static readonly int[,] MGmaterialValues;
         public static readonly int[,] EGmaterialValues;
-
+        public NeuralNetwork nn;
 
         static Evaluator()
         {
@@ -192,7 +194,13 @@ namespace Axiom.src.core.Evaluation
             }
         }
 
-        public static int Evaluate(Board.Board board, int GamePhase)
+        public Evaluator()
+        {
+            nn = new(768, 64);
+            nn.LoadFromFile("C:/c/beans.bin", 64);
+        }
+
+        public static int EvaluateStatic(Board.Board board, int GamePhase)
         {
             int MGeval = 0;
             int EGeval = 0;
@@ -207,6 +215,24 @@ namespace Axiom.src.core.Evaluation
             int eval = (MGeval * (256 - GamePhase) + EGeval * GamePhase) / 256;
 
             return eval;
+        }
+
+        public int EvaluateNN(Board.Board board)
+        {
+            double[] inputsUs;
+            double[] inputsThem;
+            if (board.WhiteToMove)
+            {
+                inputsUs = FenUtlity.FenToArray(board.Fen.Split(' ')[0], true);
+                inputsThem = FenUtlity.FenToArray(board.Fen.Split(' ')[0], false);
+            }
+            else
+            {
+                inputsUs = FenUtlity.FenToArray(board.Fen.Split(' ')[0], false);
+                inputsThem = FenUtlity.FenToArray(board.Fen.Split(' ')[0], true);
+            }
+            
+            return (int)nn.GetOutput(inputsUs, inputsThem, board.WhiteToMove);
         }
 
         public static int MGmaterialValue(byte piece, int square)

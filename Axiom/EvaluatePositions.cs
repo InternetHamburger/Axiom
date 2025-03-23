@@ -12,8 +12,8 @@ namespace Axiom
     {
         public static void Evaluate()
         {
-            string edpFilePath = @"C:\c\data.edp";
-            string outputFilePath = @"C:\c\evaluations.edp";
+            string edpFilePath = @"C:\data\old_games.edp";
+            string outputFilePath = @"C:\data\old_games_evals.edp";
             int nodeLimit = 50000;
             int maxThreads = 10; // Avoid full CPU saturation
 
