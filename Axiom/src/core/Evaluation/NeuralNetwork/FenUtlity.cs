@@ -16,7 +16,7 @@ namespace Nerual_Network.Chess
             return 1 / (1 + Math.Pow(10, -x / 400));
         }
 
-        public static double[] FenToArray(string mainFen)
+        public static double[] FenToArray(string mainFen, bool IsUs)
         {
             byte[] squarePieces = new byte[64];
 
@@ -55,8 +55,17 @@ namespace Nerual_Network.Chess
                 if (piece != 0)
                 {
                     if (piece > Piece.WhiteKing) piece -= 2;
-                    int index = 64 * (piece - 1) + i;
-                    nnInput[index] = 1;
+                    if (IsUs)
+                    {
+                        int index = 64 * (piece - 1) + i;
+                        nnInput[index] = 1;
+                    }
+                    else
+                    {
+                        piece += (byte)(piece > Piece.WhiteKing ? -6 : 6);
+                        int index = 64 * (piece - 1) + j;
+                        nnInput[index] = 1;
+                    }
                 }
             }
             return nnInput;

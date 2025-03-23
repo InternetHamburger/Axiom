@@ -44,17 +44,21 @@ namespace Nerual_Network.Setup
             return 1 / (1 + Math.Exp(-x));
         }
 
-        public double GetOutput(double[] input, bool WhiteToMove)
+        public double GetOutput(double[] inputUs, double[] inputThem, bool WhiteToMove)
         {
-            double[] accumulator = MatrixHelper.MatrixVectorMultiplication(HlWeightMatrix, input);
-            MatrixHelper.VectorAddition(accumulator, HlBiasVector);
-            MatrixHelper.ApplyActivationFunction(accumulator);
+            double[] accumulatorUs = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, inputUs);
+            double[] accumulatorThem = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, inputThem);
+            MatrixHelper.VectorAddition(accumulatorUs, HlBiasVector);
+            MatrixHelper.VectorAddition(accumulatorThem, HlBiasVector);
+            MatrixHelper.ApplyActivationFunction(accumulatorUs);
+            MatrixHelper.ApplyActivationFunction(accumulatorThem);
 
 
-            double output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulator);
-            output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulator);
+            double output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
+            output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulatorThem);
+            output /= QA;
             output += OutputBias;
-            return output;
+            return output * EvalScale / (QA * QB);
         }
 
         public void LoadFromFile(string filePath, int hlSize)

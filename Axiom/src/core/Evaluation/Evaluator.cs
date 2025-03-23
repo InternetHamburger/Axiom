@@ -219,9 +219,20 @@ namespace Axiom.src.core.Evaluation
 
         public int EvaluateNN(Board.Board board)
         {
-            double[] inputs = FenUtlity.FenToArray(board.Fen.Split(' ')[0]);
-            if (!board.WhiteToMove) Array.Reverse(inputs);
-            return (int)nn.GetOutput(inputs, board.WhiteToMove);
+            double[] inputsUs;
+            double[] inputsThem;
+            if (board.WhiteToMove)
+            {
+                inputsUs = FenUtlity.FenToArray(board.Fen.Split(' ')[0], true);
+                inputsThem = FenUtlity.FenToArray(board.Fen.Split(' ')[0], false);
+            }
+            else
+            {
+                inputsUs = FenUtlity.FenToArray(board.Fen.Split(' ')[0], false);
+                inputsThem = FenUtlity.FenToArray(board.Fen.Split(' ')[0], true);
+            }
+            
+            return (int)nn.GetOutput(inputsUs, inputsThem, board.WhiteToMove);
         }
 
         public static int MGmaterialValue(byte piece, int square)

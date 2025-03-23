@@ -7,7 +7,7 @@ namespace Nerual_Network
     {
         public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
-            double[] vectorProduct = new double[matrix.Length];
+            double[] vectorProduct = new double[matrix[0].Length];
             int count = matrix.Count();
             for (int i = 0; i < count; i++)
             {
