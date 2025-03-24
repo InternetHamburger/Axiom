@@ -62,22 +62,14 @@ namespace Axiom.src.core.Search
             timeLimit = timelimit;
             NodeLimit = nodeLimit;
 
-
-            int alpha;
-            int beta;
-
-            const int delta = 7;
-
             var watch = new Stopwatch();
             watch.Start();
             for (int depth = 1; depth <= depthlimit; depth++)
             {
-                alpha = eval - delta;
-                beta = eval + delta;
 
                 // Initial call
                 // Very tight bounds, but pays off
-                NegaMax(depth, 0, alpha, beta);
+                NegaMax(depth, 0, NegativeInf, PositiveInf);
                 maxDepth = depth;
 
 
@@ -112,8 +104,17 @@ namespace Axiom.src.core.Search
             {
                 return evaluator.EvaluateNN(board);
             }
+
+            ulong TTIndex = board.ZobristHash % numTTEntries;
+            //TTEntry ttEntry = TT[TTIndex];
+            //if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
+            //{
+            //    return ttEntry.Score;
+            //}
+
             int maxScore = NegativeInf;
             int numLegalMoves = 0;
+            bool alphaWasRaised = false;
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             Move bestMove = Move.NullMove;
             for(int i = 0; i < pseudoLegalMoves.Length; i++)
@@ -162,10 +163,28 @@ namespace Axiom.src.core.Search
                     }
                     bestMove = move;
                     maxScore = score;
+                    if (score > alpha)
+                    {
+                        alphaWasRaised = true;
+                        alpha = score;
+                    }
+                }
+
+                if (score >= beta)
+                {
+                    TT[TTIndex] = new(maxScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
+                    return maxScore;
                 }
             }
-            ulong TTIndex = board.ZobristHash % numTTEntries;
-            TT[TTIndex] = new(0, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
+            
+            if (alphaWasRaised)
+            {
+                TT[TTIndex] = new(maxScore, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
+            }
+            else
+            {
+                TT[TTIndex] = new(maxScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
+            }
             if (numLegalMoves == 0)
             {
                 return NegativeInf + plyFromRoot; // TODO: Update to support stalemate
@@ -174,7 +193,6 @@ namespace Axiom.src.core.Search
             
 
             return maxScore;
-
         }
 
         static int PhaseScore(byte piece)
