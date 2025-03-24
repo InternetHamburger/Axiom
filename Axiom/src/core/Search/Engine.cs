@@ -18,6 +18,8 @@ namespace Axiom.src.core.Search
         const int sizeTTEntry = 16;
         const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
 
+        public TTEntry[] TT;
+
         public int GamePhase;
         public const int TotalPhase = 24;
 
@@ -33,17 +35,17 @@ namespace Axiom.src.core.Search
         public double timeLimit;
         public int NodeLimit;
 
-        public TTEntry[] TT;
-        public MoveOrderer moveOrderer;
-
 
         public Board.Board board;
+        public Evaluator evaluator;
+
+        
 
         public Engine()
         {
             board = new Board.Board();
+            evaluator = new();
             TT = new TTEntry[numTTEntries];
-            moveOrderer = new();
             printInfo = true;
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
@@ -77,38 +79,6 @@ namespace Axiom.src.core.Search
                 // Very tight bounds, but pays off
                 NegaMax(depth, 0, alpha, beta);
                 maxDepth = depth;
-                int numReSearches = 0;
-
-                while (currentEval >= beta || currentEval <= alpha)
-                {
-                    if (numReSearches == 7)
-                    {
-                        if (currentEval >= beta)
-                        {
-                            alpha = eval - delta;
-                            NegaMax(depth, 0, alpha, PositiveInf);
-                        }
-                        else if (currentEval <= alpha)
-                        {
-                            beta = eval + delta;
-                            NegaMax(depth, 0, NegativeInf, beta);
-                        }
-                        break;
-                    }
-                    if (currentEval >= beta)
-                    {
-                        alpha = eval - delta;
-                        beta += 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
-                    }
-                    else if (currentEval <= alpha)
-                    {
-                        beta = eval + delta;
-                        alpha -= 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
-                    }
-                    numReSearches++;
-                }
 
 
                 if (IsTimeUp || SearchedNodes >= NodeLimit)
@@ -126,9 +96,8 @@ namespace Axiom.src.core.Search
         {
             maxDepth = 0;
             eval = 0;
-            TT = new TTEntry[numTTEntries];
-            moveOrderer.Init();
             SearchedNodes = 0;
+            TT = new TTEntry[numTTEntries];
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
             currentEval = NegativeInf;
@@ -138,81 +107,18 @@ namespace Axiom.src.core.Search
 
         private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
-            ulong TTIndex = board.ZobristHash % numTTEntries;
-            TTEntry ttEntry = TT[TTIndex];
-
-            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
-            {
-                if (ttEntry.IsExact)
-                {
-                    return ttEntry.Score;
-                }
-                else if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
-                {
-                    alpha = ttEntry.Score;
-                }
-                else if (ttEntry.IsUpperBound && ttEntry.Score < beta)
-                {
-                    beta = ttEntry.Score;
-                }
-
-                if (alpha >= beta)
-                {
-                    return beta; // Cutoff with the lower bound score
-                }
-            }
-
             SearchedNodes++;
-            if (depth <= 0)
+            if (depth == 0)
             {
-                return Quiecence(alpha, beta);
+                return evaluator.EvaluateNN(board);
             }
-
-            // Not in root node
-            if (plyFromRoot > 0)
-            {
-                if (board.IsTwofoldRepetition())
-                {
-                    return 0;
-                }
-            }
-            bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int staticEval = Evaluator.Evaluate(board, GamePhase);
-            int margin = 150 * depth; // e.g. 150 * depth
-            if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
-            {   
-                return staticEval; // fail soft
-            }
-            // Null Move Pruning
-            const int NULL_MOVE_MIN_DEPTH = 3;
-            const int R = 2; // Reduction factor for null move pruning
-
-            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase))
-            {
-                board.MakeNullMove();
-                int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
-                board.UndoNullMove();
-
-                if (nullMoveScore >= beta)
-                {
-                    return nullMoveScore; // Fail-high cutoff
-                }
-            }
-
-            Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
-            moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
-
-
+            int maxScore = NegativeInf;
             int numLegalMoves = 0;
-            int bestScore = NegativeInf;
-            bool alphaWasRaised = false;
+            Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             Move bestMove = Move.NullMove;
-            for (int i = 0; i < pseudoLegalMoves.Length; i++)
+            for(int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
-                
-
-                // Filter illegal castling moves
                 if (move.MoveFlag == Move.CastleFlag)
                 {
                     if (board.IsInCheck(board.WhiteToMove))
@@ -224,7 +130,7 @@ namespace Axiom.src.core.Search
                         case 62: // white short castle (g1)
                             if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) { continue; }
                             break;
-                        case 58: // white loing castle (c1)
+                        case 58: // white long castle (c1)
                             if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) { continue; }
                             break;
                         case 6: // black short castle (g8)
@@ -235,164 +141,40 @@ namespace Axiom.src.core.Search
                             break;
                     }
                 }
-
-                bool isCapture = board.Squares[move.TargetSquare] != 0;
                 board.MakeMove(move);
-
-                // Filter illegal moves
                 if (board.IsInCheck(!board.WhiteToMove))
                 {
                     board.UndoMove(move);
                     continue;
                 }
-
-
-
                 numLegalMoves++;
-
-
-                int futilitymargin = 200 * depth; // Dynamic futility margin
-
-                // Futility pruning: skip moves unlikely to raise alpha
-                if (depth <= 3 && staticEval + futilitymargin <= alpha && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
-                {
-                    board.UndoMove(move);
-                    continue;
-                }
-                int score;
-                int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
-                if (i == 0)
-                {
-                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
-                }
-                else
-                {
-                    int reduction = (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove)) ? 1 : 0;
-                    score = -NegaMax(depth - 2 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha);
-                    if (score > alpha)
-                    {
-                        score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -beta, -alpha);
-                    }
-                }
+                int score = -NegaMax(depth - 1, plyFromRoot + 1, -beta, -alpha);
 
                 board.UndoMove(move);
 
-                if (IsTimeUp || SearchedNodes >= NodeLimit)
+                if (score > maxScore)
                 {
-                    return 0;
-                }
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestMove = move;
+                    
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
                         currentEval = score;
                     }
-                    if (score > alpha)
-                    {
-                        moveOrderer.UpdateHistoryTableAlphaRaise(board, move, depth);
-                        alphaWasRaised = true;
-                        alpha = score;
-                    }
-                }
-
-                if (beta <= alpha)
-                {
-                    if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
-                    {
-                        moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
-                        moveOrderer.KillerMoves[plyFromRoot] = move;
-                    }
-                    else
-                    {
-                        
-                    }
-                        TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
-                    return bestScore; // Return beta on cutoff
+                    bestMove = move;
+                    maxScore = score;
                 }
             }
-
-
+            ulong TTIndex = board.ZobristHash % numTTEntries;
+            TT[TTIndex] = new(0, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
             if (numLegalMoves == 0)
             {
-                if (board.IsInCheck(board.WhiteToMove))
-                {
-                    return NegativeInf + plyFromRoot; // Checkmate
-                }
-                return 0; // Stalemate
+                return NegativeInf + plyFromRoot; // TODO: Update to support stalemate
             }
 
+            
 
+            return maxScore;
 
-            if (alphaWasRaised)
-            {
-                TT[TTIndex] = new(bestScore, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
-            }
-            else
-            {
-                TT[TTIndex] = new(bestScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
-            }
-            return bestScore;
-        }
-
-        private int Quiecence(int alpha, int beta)
-        {
-            SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board, GamePhase);
-
-            if (standingPat >= beta)
-            {
-                return standingPat;
-            }
-
-            if (alpha < standingPat)
-            {
-                alpha = standingPat;
-            }
-
-            Move[] captureMoves = MoveGenerator.GetPseudoLegalCaptures(board);
-            moveOrderer.OrderCaptures(captureMoves, board);
-
-            if (IsTimeUp)
-            {
-                return standingPat;
-            }
-            int bestScore = standingPat;
-            foreach (Move move in captureMoves)
-            {
-                // No need to filter illegal castling moves
-                // as they are not generated in qSearch
-
-                board.MakeMove(move);
-
-                // Filter illegal moves
-                if (board.IsInCheck(!board.WhiteToMove))
-                {
-                    board.UndoMove(move);
-                    continue;
-                }
-
-                int score = -Quiecence(-beta, -alpha);
-                board.UndoMove(move);
-
-                if (score >= beta)
-                {
-                    return score;
-                }
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    if (score > alpha)
-                    {
-                        alpha = score;
-                    }
-                }
-            }
-
-            return bestScore;
         }
 
         static int PhaseScore(byte piece)
