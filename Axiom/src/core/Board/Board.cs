@@ -1,4 +1,5 @@
-﻿using Axiom.src.core.Move_Generation;
+﻿using Axiom.src.core.Evaluation;
+using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Board
@@ -14,7 +15,11 @@ namespace Axiom.src.core.Board
         public int[] KingSquares;
         public ulong ZobristHash;
 
-        public double[] NNInput;
+
+        public short[] StmAccumulator;
+        public short[] NstmAccumulator;
+
+
 
         private Stack<GameState> GameHistory;
         private List<ulong> RepetitionHistory;
@@ -24,7 +29,8 @@ namespace Axiom.src.core.Board
         public Board(string fen = BoardUtility.StartPos)
         {
             Squares = new byte[64];
-            NNInput = new double[64 * 2 * 6];
+            StmAccumulator = new short[Evaluator.HlSize];
+            NstmAccumulator = new short[Evaluator.HlSize];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];
             WhiteToMove = true;
@@ -39,7 +45,8 @@ namespace Axiom.src.core.Board
         private void Init()
         {
             Squares = new byte[64];
-            NNInput = new double[64 * 2 * 6];
+            StmAccumulator = new short[Evaluator.HlSize];
+            NstmAccumulator = new short[Evaluator.HlSize];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];
             WhiteToMove = true;
@@ -68,16 +75,6 @@ namespace Axiom.src.core.Board
             ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
 
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
-
-
-            // Update inputs for NNUE
-            int movedPieceIndex = movedPiece;
-            if (movedPiece > Piece.WhiteKing) movedPieceIndex -= 2;
-            int targetIndex = 64 * (movedPieceIndex - 1) + targetSquare;
-            int startIndex = 64 * (movedPieceIndex - 1) + startSquare;
-            NNInput[targetIndex] = 1;
-            NNInput[startIndex] = 0;
-            
 
 
             // Remove legality for en passant
@@ -125,12 +122,6 @@ namespace Axiom.src.core.Board
             {
                 BitBoards[capturedPiece] ^= 1UL << targetSquare;
                 ZobristHash ^= Zobrist.ZobristPieceValues[capturedPiece, targetSquare];
-
-                // Update inputs for NNUE
-                int capturedPieceIndex = capturedPiece;
-                if (capturedPiece > Piece.WhiteKing) capturedPieceIndex -= 2;
-                int targetIndexCapture = 64 * (capturedPieceIndex - 1) + targetSquare;
-                NNInput[targetIndexCapture] = 0;
             }
 
             if (move.IsDoublePawnPush)
@@ -146,11 +137,6 @@ namespace Axiom.src.core.Board
                 Squares[targetSquare] = promotionPiece;
                 ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
                 ZobristHash ^= Zobrist.ZobristPieceValues[promotionPiece, targetSquare];
-
-                int promotionPieceIndex = promotionPiece > Piece.King ? promotionPiece - 2 : promotionPiece;
-                int targetIndexPromotion = 64 * (promotionPieceIndex - 1) + targetSquare;
-                NNInput[targetIndexPromotion] = 1;
-                NNInput[targetIndex] = 0;
             }
             else if (move.IsEnPassantCapture)
             {
@@ -159,14 +145,9 @@ namespace Axiom.src.core.Board
                 Squares[enPassantCaptureSquare] = Piece.None;
                 BitBoards[capturedPawn] ^= 1UL << enPassantCaptureSquare;
                 ZobristHash ^= Zobrist.ZobristPieceValues[capturedPawn, enPassantCaptureSquare];
-                int enPassantPieceIndex = capturedPawn > Piece.King ? capturedPawn - 2 : capturedPawn;
-                int targetIndexEnPassant = 64 * (enPassantPieceIndex - 1) + enPassantCaptureSquare;
-                NNInput[targetIndexEnPassant] = 0;
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
-                int targetIndexCastling;
-                int startIndexCastling;
                 switch (targetSquare)
                 {
                     case 62: // white short castle (g1)
@@ -176,11 +157,6 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearWhiteKingsideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 61];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 63];
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 1) + 63;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 1) + 61;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 58: // white loing castle (c1)
                         Squares[59] = Squares[56];
@@ -189,11 +165,6 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearWhiteQueensideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 56];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 59];
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 1) + 56;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 1) + 59;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 6: // black short castle (g8)
                         Squares[5] = Squares[7];
@@ -202,11 +173,6 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearBlackKingsideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 5];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 7];
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 3) + 7;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 3) + 5;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 2: // black long castle (c8)
                         Squares[3] = Squares[0];
@@ -215,11 +181,6 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearBlackQueensideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 0];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 3];
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 3) + 0;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 3) + 3;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                 }
             }
@@ -247,24 +208,9 @@ namespace Axiom.src.core.Board
             Squares[targetSquare] = capturedPiece;
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
 
-            // Update inputs for NNUE
-            int movedPieceIndex = movedPiece;
-            if (movedPiece > Piece.WhiteKing) movedPieceIndex -= 2;
-            int targetIndex = 64 * (movedPieceIndex - 1) + targetSquare;
-            int startIndex = 64 * (movedPieceIndex - 1) + startSquare;
-            NNInput[targetIndex] = 0;
-            NNInput[startIndex] = 1;
-
-
             if (capturedPiece != Piece.None)
             {
                 BitBoards[capturedPiece] |= 1UL << targetSquare;
-
-                // Update inputs for NNUE
-                int capturedPieceIndex = capturedPiece;
-                if (capturedPiece > Piece.WhiteKing) capturedPieceIndex -= 2;
-                int targetIndexCapture = 64 * (capturedPieceIndex - 1) + targetSquare;
-                NNInput[targetIndexCapture] = 1;
             }
             if (Piece.PieceType(movedPiece) == Piece.King)
             {
@@ -276,11 +222,6 @@ namespace Axiom.src.core.Board
                 Squares[startSquare] = movedPawn;
                 BitBoards[movedPiece] ^= 1UL << startSquare;
                 BitBoards[movedPawn] ^= 1UL << startSquare;
-
-                int promotionPieceIndex = movedPawn > Piece.King ? movedPawn - 2 : movedPawn;
-                int startIndexPromotion = 64 * (movedPawn - 1) + startSquare;
-                NNInput[startIndex] = 0;
-                NNInput[startIndexPromotion] = 1;
             }
             else if (move.IsEnPassantCapture)
             {
@@ -288,10 +229,6 @@ namespace Axiom.src.core.Board
                 byte capturedPawn = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
                 Squares[enPassantCaptureSquare] = capturedPawn;
                 BitBoards[Squares[enPassantCaptureSquare]] ^= 1UL << enPassantCaptureSquare;
-
-                int enPassantPieceIndex = capturedPawn > Piece.King ? capturedPawn - 2 : capturedPawn;
-                int targetIndexEnPassant = 64 * (enPassantPieceIndex - 1) + enPassantCaptureSquare;
-                NNInput[targetIndexEnPassant] = 1;
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -303,41 +240,21 @@ namespace Axiom.src.core.Board
                         Squares[63] = Squares[61];
                         Squares[61] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 1) + 61;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 1) + 63;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 58: // white loing castle (c1)
                         Squares[56] = Squares[59];
                         Squares[59] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 1) + 59;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 1) + 56;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 6: // black short castle (g8)
                         Squares[7] = Squares[5];
                         Squares[5] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 3) + 5;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 3) + 7;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                     case 2: // black long castle (c8)
                         Squares[0] = Squares[3];
                         Squares[3] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
-
-                        startIndexCastling = 64 * (Piece.WhiteRook - 3) + 3;
-                        targetIndexCastling = 64 * (Piece.WhiteRook - 3) + 0;
-                        NNInput[targetIndexCastling] = 1;
-                        NNInput[startIndexCastling] = 0;
                         break;
                 }
             }
@@ -487,13 +404,6 @@ namespace Axiom.src.core.Board
 
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
-                byte piece = pos.Squares[squareIndex];
-                if (piece != 0)
-                {
-                    if (piece > Piece.WhiteKing) piece -= 2;
-                    int index = 64 * (piece - 1) + squareIndex;
-                    NNInput[index] = 1;
-                }
                 Squares[squareIndex] = pos.Squares[squareIndex];
 
                 BitBoards[Squares[squareIndex]] |= 1UL << squareIndex;
@@ -523,7 +433,7 @@ namespace Axiom.src.core.Board
 
         public bool IsThreefoldRepetition()
         {
-            // Two-fold repetition
+            // Three-fold repetition
             if (RepetitionHistory.Count(pos => pos == ZobristHash) >= 2)
             {
                 return true;

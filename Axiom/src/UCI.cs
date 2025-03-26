@@ -50,7 +50,7 @@ namespace Axiom.src
                     break;
                 case "eval":
                     engine.CalculateGamePhase();
-                    Console.WriteLine(Evaluator.EvaluateStatic(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
+                    Console.WriteLine(Evaluator.Evaluate(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
                     break;
                 case "nneval":
                     Console.WriteLine(engine.evaluator.EvaluateNN(engine.board));

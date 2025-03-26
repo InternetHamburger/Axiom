@@ -155,6 +155,7 @@ namespace Axiom.src.core.Evaluation
 
         public static readonly int[,] MGmaterialValues;
         public static readonly int[,] EGmaterialValues;
+        public const int HlSize = 64;
         public NeuralNetwork nn;
 
         static Evaluator()
@@ -196,11 +197,11 @@ namespace Axiom.src.core.Evaluation
 
         public Evaluator()
         {
-            nn = new(768, 64);
-            nn.LoadFromFile("C:/c/beans.bin", 64);
+            nn = new(768, HlSize);
+            nn.LoadFromFile("C:/c/beans.bin", HlSize);
         }
 
-        public static int EvaluateStatic(Board.Board board, int GamePhase)
+        public static int Evaluate(Board.Board board, int GamePhase)
         {
             int MGeval = 0;
             int EGeval = 0;

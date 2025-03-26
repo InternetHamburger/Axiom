@@ -35,6 +35,7 @@ namespace Axiom.src.core.Search
 
         public TTEntry[] TT;
         public MoveOrderer moveOrderer;
+        public Evaluator evaluator;
 
 
         public Board.Board board;
@@ -44,6 +45,7 @@ namespace Axiom.src.core.Search
             board = new Board.Board();
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
+            evaluator = new();
             printInfo = true;
             NegaMax(1, 0, NegativeInf, PositiveInf);
         }
@@ -128,6 +130,7 @@ namespace Axiom.src.core.Search
             eval = 0;
             TT = new TTEntry[numTTEntries];
             moveOrderer.Init();
+            evaluator = new();
             SearchedNodes = 0;
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
@@ -158,7 +161,7 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return beta; // Cutoff with the lower bound score
+                    return alpha;
                 }
             }
 
@@ -177,7 +180,7 @@ namespace Axiom.src.core.Search
                 }
             }
             bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int staticEval = Evaluator.Evaluate(board, GamePhase);
+            int staticEval = evaluator.EvaluateNN(board);
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
             {   
@@ -341,7 +344,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board, GamePhase);
+            int standingPat = evaluator.EvaluateNN(board);
 
             if (standingPat >= beta)
             {
