@@ -177,7 +177,7 @@ namespace Axiom.src.core.Search
                 }
             }
             bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int staticEval = Evaluator.Evaluate(board, GamePhase);
+            int staticEval = Evaluator.EvaluateStatic(board, GamePhase);
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
             {   
@@ -341,7 +341,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board, GamePhase);
+            int standingPat = Evaluator.EvaluateStatic(board, GamePhase);
 
             if (standingPat >= beta)
             {
