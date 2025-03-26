@@ -53,24 +53,28 @@ namespace Axiom.src.core.Evaluation
             {
                 return 10000;
             }
-            else if (Move.SameMove(move, killerMove))
-            {
-                return 1;
-            }
-            if (board.Squares[move.TargetSquare] != 0)
-            {
-                int captureMaterialDelta = CaptureScoreDelta(move, board);
-                int moveScore = captureMaterialDelta;
-
-                return moveScore;
-            }
             else
             {
-                int index1 = board.WhiteToMove ? 0 : 1;
-                int index2 = board.Squares[move.TargetSquare];
-                int index3 = move.TargetSquare;
-                return HistoryTable[index1, index2, index3] - 10000;
+                return 0;
             }
+            //else if (Move.SameMove(move, killerMove))
+            //{
+            //    return 1;
+            //}
+            //if (board.Squares[move.TargetSquare] != 0)
+            //{
+            //    int captureMaterialDelta = CaptureScoreDelta(move, board);
+            //    int moveScore = captureMaterialDelta;
+
+            //    return moveScore;
+            //}
+            //else
+            //{
+            //    int index1 = board.WhiteToMove ? 0 : 1;
+            //    int index2 = board.Squares[move.TargetSquare];
+            //    int index3 = move.TargetSquare;
+            //    return HistoryTable[index1, index2, index3] - 10000;
+            //}
         }
 
         static int CaptureScore(Move move, Board.Board board)

@@ -4,6 +4,7 @@ using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Axiom.src.core.Search
 {
@@ -14,7 +15,7 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        const int sizeTTMb = 32;
+        const int sizeTTMb = 1024;
         const int sizeTTEntry = 16;
         const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
 
@@ -38,6 +39,7 @@ namespace Axiom.src.core.Search
 
         public Board.Board board;
         public Evaluator evaluator;
+        public MoveOrderer moveOrderer;
 
         
 
@@ -45,6 +47,7 @@ namespace Axiom.src.core.Search
         {
             board = new Board.Board();
             evaluator = new();
+            moveOrderer = new();
             TT = new TTEntry[numTTEntries];
             printInfo = true;
             NegaMax(1, 0, NegativeInf, PositiveInf);
@@ -89,6 +92,7 @@ namespace Axiom.src.core.Search
             maxDepth = 0;
             eval = 0;
             SearchedNodes = 0;
+            moveOrderer.Init();
             TT = new TTEntry[numTTEntries];
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
             currentBestMove = Move.NullMove;
@@ -106,16 +110,32 @@ namespace Axiom.src.core.Search
             }
 
             ulong TTIndex = board.ZobristHash % numTTEntries;
-            //TTEntry ttEntry = TT[TTIndex];
-            //if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
-            //{
-            //    return ttEntry.Score;
-            //}
+            TTEntry ttEntry = TT[TTIndex];
+            if (ttEntry.Depth == depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
+            {
+                if (ttEntry.IsExact)
+                {
+                    return ttEntry.Score;
+                }
+                if (ttEntry.IsLowerBound && ttEntry.Score > alpha)
+                {
+                    alpha = ttEntry.Score;
+                }
+                else if (ttEntry.IsUpperBound && ttEntry.Score < beta)
+                {
+                    beta = ttEntry.Score;
+                }
+                if (alpha >= beta)
+                {
+                    return ttEntry.Score;
+                }
+            }
 
             int maxScore = NegativeInf;
             int numLegalMoves = 0;
             bool alphaWasRaised = false;
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
+            moveOrderer.OrderMoves(pseudoLegalMoves, board, new(ttEntry.BestMove), plyFromRoot);
             Move bestMove = Move.NullMove;
             for(int i = 0; i < pseudoLegalMoves.Length; i++)
             {
@@ -189,8 +209,6 @@ namespace Axiom.src.core.Search
             {
                 return NegativeInf + plyFromRoot; // TODO: Update to support stalemate
             }
-
-            
 
             return maxScore;
         }

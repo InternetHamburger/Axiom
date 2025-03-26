@@ -9,7 +9,7 @@ namespace Axiom.src.core.Perft
     static class Perft
     {
 
-        public const string perftSuitePath = @"C:\Users\Sindr\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
+        public const string perftSuitePath = @"C:\Users\Sindre Wolden\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
 
         public static void RunSuite(int maxDepth = 6)
         {
@@ -192,7 +192,9 @@ namespace Axiom.src.core.Perft
                             break;
                     }
                 }
+
                 board.MakeMove(move);
+
                 if (board.IsInCheck(!board.WhiteToMove))
                 {
                     board.UndoMove(move);
