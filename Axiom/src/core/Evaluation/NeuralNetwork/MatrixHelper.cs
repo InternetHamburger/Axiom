@@ -51,7 +51,7 @@ namespace Nerual_Network
             return vectorProduct;
         }
 
-        public static int OutputMatrixVectorMultiplication(short[] matrix, short[] vector)
+        public static int OutputMatrixVectorMultiplication(short[] matrix, int[] vector)
         {
             int product = 0;
             int count = matrix.Count();

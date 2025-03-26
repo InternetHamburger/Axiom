@@ -22,15 +22,15 @@ namespace Nerual_Network.Setup
         public short[] HlBiasVector;
         public short[] OutputWeightVectorThem;
 
-        public short[] StmAccumulator;
-        public short[] NstmAccumulator;
+        public int[] StmAccumulator;
+        public int[] NstmAccumulator;
 
         public short[] OutputWeightVectorUs;
         public short OutputBias;
         public NeuralNetwork(int inputSize, int hlSize)
         {
-            StmAccumulator = new short[hlSize];
-            NstmAccumulator = new short[hlSize];
+            StmAccumulator = new int[hlSize];
+            NstmAccumulator = new int[hlSize];
 
             HlWeightMatrix = new short[inputSize][];
             for (int i = 0; i < inputSize; i++)
@@ -46,30 +46,31 @@ namespace Nerual_Network.Setup
             this.hlSize = hlSize;
         }
 
-        public static short ActivationFunction(short x)
+        public static int ActivationFunction(int x)
         {
             double a = x;
-            return (short)Math.Pow(Math.Clamp(a, 0, QA), 2);
+            return (int)Math.Pow(Math.Clamp(a, 0, QA), 2);
         }
 
         public int GetOutput()
         {
-            short[] accumulatorUs = StmAccumulator;
-            short[] accumulatorThem = NstmAccumulator;
-            for (int i = 0; i < hlSize; i++)
-            {
-                accumulatorUs[i] = (short)(ActivationFunction(accumulatorUs[i]));
-                accumulatorThem[i] = (short)(ActivationFunction(accumulatorThem[i]));
-            }
+            int[] accumulatorUs = StmAccumulator;
+            int[] accumulatorThem = NstmAccumulator;
             for (int i = 0; i < 16; i++)
             {
-                Console.WriteLine(accumulatorThem[i] + " | " + NstmAccumulator[i]);
+                Console.WriteLine(NstmAccumulator[i]);
             }
+            for (int i = 0; i < hlSize; i++)
+            {
+                accumulatorUs[i] = ActivationFunction(StmAccumulator[i]);
+                accumulatorThem[i] = ActivationFunction(NstmAccumulator[i]);
+            }
+            Console.WriteLine();
+            
 
             int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
             output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulatorThem);
             
-            Console.WriteLine(output);
             output /= QA;
             output += OutputBias;
             return output * EvalScale / (QA * QB);
@@ -84,7 +85,6 @@ namespace Nerual_Network.Setup
                 StmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];
                 NstmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[1, piece, square]][i];
             }
-            Console.WriteLine(PreComputedMoveData.NNInputIndicies[1, piece, square]);
         }
 
         public void RemoveFeature(int piece, int square)
