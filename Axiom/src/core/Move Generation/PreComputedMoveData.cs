@@ -1,4 +1,5 @@
-﻿using Axiom.src.core.Utility;
+﻿using Axiom.src.core.Board;
+using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Move_Generation
 {
@@ -7,13 +8,14 @@ namespace Axiom.src.core.Move_Generation
         public static readonly ulong[] KnightAttacks;
         public static readonly ulong[] KingAttacks;
         public static readonly int[] DstFromCenter;
+        public static readonly int[,,] NNInputIndicies;
 
         static PreComputedMoveData()
         {
             KnightAttacks = new ulong[64];
             KingAttacks = new ulong[64];
             DstFromCenter = new int[64];
-
+            NNInputIndicies = new int[2, (Piece.MaxPieceIndex + 1), 64];
             int[] allKnightJumps = { 15, 17, -17, -15, 10, -6, 6, -10 };
 
 
@@ -42,6 +44,31 @@ namespace Axiom.src.core.Move_Generation
                         }
                     }
                 }
+
+                for (int stm = 0; stm < 2; stm++)
+                {
+                    for (int piece = 1; piece <= Piece.MaxPieceIndex; piece++)
+                    {
+                        for(int square = 0; square < 64; square++)
+                        {
+                            int pieceIndex = piece;
+                            if (pieceIndex > Piece.WhiteKing) pieceIndex -= 2;
+                            if (stm == 0)
+                            {
+                                int index = 64 * (pieceIndex - 1) + square;
+                                NNInputIndicies[stm, piece, square] = index;
+                            }
+                            else
+                            {
+                                pieceIndex += piece > Piece.WhiteKing ? -6 : 6;
+                                int index = 64 * (pieceIndex - 1) + BoardUtility.FlipSquare(square);
+                                NNInputIndicies[stm, piece, square] = index;
+                            }
+                        }
+                    }
+                }
+
+
                 KingAttacks[squareIndex] = ComputeKingAttacks(squareIndex);
                 KnightAttacks[squareIndex] = knightBitboard;
             }

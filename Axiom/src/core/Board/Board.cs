@@ -1,6 +1,7 @@
 ﻿using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
+using Nerual_Network.Setup;
 
 namespace Axiom.src.core.Board
 {
@@ -16,9 +17,8 @@ namespace Axiom.src.core.Board
         public ulong ZobristHash;
 
 
-        public short[] StmAccumulator;
-        public short[] NstmAccumulator;
-
+        public const int HlSize = 64;
+        public NeuralNetwork nn;
 
 
         private Stack<GameState> GameHistory;
@@ -28,9 +28,10 @@ namespace Axiom.src.core.Board
 
         public Board(string fen = BoardUtility.StartPos)
         {
+            
+            nn = new(768, HlSize);
+            nn.LoadFromFile("C:/c/beans.bin", HlSize);
             Squares = new byte[64];
-            StmAccumulator = new short[Evaluator.HlSize];
-            NstmAccumulator = new short[Evaluator.HlSize];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];
             WhiteToMove = true;
@@ -45,8 +46,6 @@ namespace Axiom.src.core.Board
         private void Init()
         {
             Squares = new byte[64];
-            StmAccumulator = new short[Evaluator.HlSize];
-            NstmAccumulator = new short[Evaluator.HlSize];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];
             WhiteToMove = true;
@@ -232,8 +231,6 @@ namespace Axiom.src.core.Board
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
-                int targetIndexCastling;
-                int startIndexCastling;
                 switch (targetSquare)
                 {
                     case 62: // white short castle (g1)
@@ -405,7 +402,7 @@ namespace Axiom.src.core.Board
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
                 Squares[squareIndex] = pos.Squares[squareIndex];
-
+                nn.AddFeature(Squares[squareIndex], squareIndex);
                 BitBoards[Squares[squareIndex]] |= 1UL << squareIndex;
                 ZobristHash ^= Zobrist.ZobristPieceValues[Squares[squareIndex], squareIndex];
 
@@ -421,6 +418,7 @@ namespace Axiom.src.core.Board
                     }
                 }
             }
+
             if (pos.epFile != -1)
             {
                 ZobristHash ^= Zobrist.EnPassantFiles[pos.epFile];
@@ -429,6 +427,8 @@ namespace Axiom.src.core.Board
 
             CurrentGameState = new(0, pos.epFile, pos.fullCastlingRights, pos.fiftyMovePlyCount, ZobristHash);
             GameHistory.Push(CurrentGameState);
+
+
         }
 
         public bool IsThreefoldRepetition()

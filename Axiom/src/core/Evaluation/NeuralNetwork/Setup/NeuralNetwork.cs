@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using Axiom.src.core.Board;
+using Axiom.src.core.Move_Generation;
+using Axiom.src.core.Utility;
+using Newtonsoft.Json;
 using System;
 using System.Reflection;
 using System.Text.Json;
@@ -15,50 +18,82 @@ namespace Nerual_Network.Setup
         public const int QA = 255;
         public const int QB = 64;
 
-        public double[][] HlWeightMatrix;
-        public double[] HlBiasVector;
-        public double[] OutputWeightVectorThem;
+        public short[][] HlWeightMatrix;
+        public short[] HlBiasVector;
+        public short[] OutputWeightVectorThem;
 
-        public double[] OutputWeightVectorUs;
-        public double OutputBias;
+        public short[] StmAccumulator;
+        public short[] NstmAccumulator;
+
+        public short[] OutputWeightVectorUs;
+        public short OutputBias;
         public NeuralNetwork(int inputSize, int hlSize)
         {
-            HlWeightMatrix = new double[inputSize][];
+            StmAccumulator = new short[hlSize];
+            NstmAccumulator = new short[hlSize];
+
+            HlWeightMatrix = new short[inputSize][];
             for (int i = 0; i < inputSize; i++)
             {
-                HlWeightMatrix[i] = new double[hlSize];
+                HlWeightMatrix[i] = new short[hlSize];
             }
-            HlBiasVector = new double[hlSize];
+            HlBiasVector = new short[hlSize];
 
-            OutputWeightVectorThem = new double[hlSize];
-            OutputWeightVectorUs = new double[hlSize];
+            OutputWeightVectorThem = new short[hlSize];
+            OutputWeightVectorUs = new short[hlSize];
             
             this.inputSize = inputSize;
             this.hlSize = hlSize;
         }
 
-        public static double ActivationFunction(double x)
+        public static short ActivationFunction(short x)
         {
-            return Math.Pow(Math.Clamp(x, 0, QA), 2);
-            return Math.Max(x, 0.01 * x);
-            return 1 / (1 + Math.Exp(-x));
+            double a = x;
+            return (short)Math.Pow(Math.Clamp(a, 0, QA), 2);
         }
 
-        public double GetOutput(double[] inputUs, double[] inputThem, bool WhiteToMove)
+        public int GetOutput()
         {
-            double[] accumulatorUs = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, inputUs);
-            double[] accumulatorThem = MatrixHelper.InputMatrixVectorMultiplication(HlWeightMatrix, inputThem);
-            MatrixHelper.VectorAddition(accumulatorUs, HlBiasVector);
-            MatrixHelper.VectorAddition(accumulatorThem, HlBiasVector);
-            MatrixHelper.ApplyActivationFunction(accumulatorUs);
-            MatrixHelper.ApplyActivationFunction(accumulatorThem);
+            short[] accumulatorUs = StmAccumulator;
+            short[] accumulatorThem = NstmAccumulator;
+            for (int i = 0; i < hlSize; i++)
+            {
+                accumulatorUs[i] = (short)(ActivationFunction(accumulatorUs[i]));
+                accumulatorThem[i] = (short)(ActivationFunction(accumulatorThem[i]));
+            }
+            for (int i = 0; i < 16; i++)
+            {
+                Console.WriteLine(accumulatorThem[i] + " | " + NstmAccumulator[i]);
+            }
 
-
-            double output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
+            int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
             output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulatorThem);
+            
+            Console.WriteLine(output);
             output /= QA;
             output += OutputBias;
             return output * EvalScale / (QA * QB);
+        }
+
+        public void AddFeature(int piece, int square)
+        {
+            square = BoardUtility.FlipSquare(square);
+            for (int i = 0; i < hlSize; i++)
+            {
+                
+                StmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];
+                NstmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[1, piece, square]][i];
+            }
+            Console.WriteLine(PreComputedMoveData.NNInputIndicies[1, piece, square]);
+        }
+
+        public void RemoveFeature(int piece, int square)
+        {
+            for (int i = 0; i < hlSize; i++)
+            {
+                StmAccumulator[i] -= HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];
+                NstmAccumulator[i] -= HlWeightMatrix[PreComputedMoveData.NNInputIndicies[1, piece, square]][i];
+            }
         }
 
         public void LoadFromFile(string filePath, int hlSize)
@@ -82,22 +117,24 @@ namespace Nerual_Network.Setup
             {
                 for (int j = 0; j < hlSize; j++) 
                 {
-                    HlWeightMatrix[i][j] = (double)weights[hlSize * i + j];
+                    HlWeightMatrix[i][j] = (short)weights[hlSize * i + j];
                 }
             }
             for (int i = 0; i < hlSize; i++)
             {
-                HlBiasVector[i] = (double)weights[inputSize * hlSize + i];
+                HlBiasVector[i] = (short)weights[inputSize * hlSize + i];
+                StmAccumulator[i] = HlBiasVector[i];
+                NstmAccumulator[i] = HlBiasVector[i];
             }
             for (int i = 0; i < hlSize; i++)
             {
-                OutputWeightVectorUs[i] = (double)weights[(inputSize + 1) * hlSize + i];
+                OutputWeightVectorUs[i] = (short)weights[(inputSize + 1) * hlSize + i];
             }
             for (int i = 0; i < hlSize; i++)
             {
-                OutputWeightVectorThem[i] = (double)weights[(inputSize + 2) * hlSize + i];
+                OutputWeightVectorThem[i] = (short)weights[(inputSize + 2) * hlSize + i];
             }
-            OutputBias = (double)weights[(inputSize + 3) * hlSize];
+            OutputBias = (short)weights[(inputSize + 3) * hlSize];
         }
     }
 }
