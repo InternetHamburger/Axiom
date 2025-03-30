@@ -45,7 +45,7 @@ namespace Axiom.src.core.Search
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
             printInfo = true;
-            NegaMax(1, 0, NegativeInf, PositiveInf);
+            //NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
         public void SetPosition(string fen)
@@ -165,7 +165,7 @@ namespace Axiom.src.core.Search
             SearchedNodes++;
             if (depth <= 0)
             {
-                return Quiecence(alpha, beta);
+                return board.Eval;
             }
 
             // Not in root node
@@ -177,7 +177,7 @@ namespace Axiom.src.core.Search
                 }
             }
             bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int staticEval = Evaluator.Evaluate(board, GamePhase);
+            int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
             {   
@@ -341,7 +341,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.Evaluate(board, GamePhase);
+            int standingPat = board.Eval;
 
             if (standingPat >= beta)
             {

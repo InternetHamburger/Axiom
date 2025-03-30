@@ -1,6 +1,7 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
+using Nerual_Network.Chess;
 using Newtonsoft.Json;
 using System;
 using System.Reflection;
@@ -52,25 +53,28 @@ namespace Nerual_Network.Setup
             return (int)Math.Pow(Math.Clamp(a, 0, QA), 2);
         }
 
-        public int GetOutput()
+        public int GetOutput(bool WhiteToMove)
         {
-            int[] accumulatorUs = StmAccumulator;
-            int[] accumulatorThem = NstmAccumulator;
-            for (int i = 0; i < 16; i++)
-            {
-                Console.WriteLine(NstmAccumulator[i]);
-            }
+            int[] accumulatorUs = new int[hlSize];
+            int[] accumulatorThem = new int[hlSize];
+
             for (int i = 0; i < hlSize; i++)
             {
-                accumulatorUs[i] = ActivationFunction(StmAccumulator[i]);
-                accumulatorThem[i] = ActivationFunction(NstmAccumulator[i]);
+                if (WhiteToMove)
+                {
+                    accumulatorUs[i] = ActivationFunction(StmAccumulator[i]);
+                    accumulatorThem[i] = ActivationFunction(NstmAccumulator[i]);
+                }
+                else
+                {
+                    accumulatorUs[i] = ActivationFunction(NstmAccumulator[i]);
+                    accumulatorThem[i] = ActivationFunction(StmAccumulator[i]);
+                }
+                
             }
-            Console.WriteLine();
-            
 
             int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
             output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulatorThem);
-            
             output /= QA;
             output += OutputBias;
             return output * EvalScale / (QA * QB);
@@ -78,6 +82,7 @@ namespace Nerual_Network.Setup
 
         public void AddFeature(int piece, int square)
         {
+            if (piece == 0) return;
             square = BoardUtility.FlipSquare(square);
             for (int i = 0; i < hlSize; i++)
             {
@@ -89,6 +94,8 @@ namespace Nerual_Network.Setup
 
         public void RemoveFeature(int piece, int square)
         {
+            if (piece == 0) return;
+            square = BoardUtility.FlipSquare(square);
             for (int i = 0; i < hlSize; i++)
             {
                 StmAccumulator[i] -= HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];

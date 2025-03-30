@@ -73,6 +73,13 @@ namespace Axiom.src.core.Board
             ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, startSquare];
             ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
 
+
+            // Update NNUE accumulators
+            // Implicitly handles captures
+            nn.RemoveFeature(movedPiece, startSquare);
+            nn.AddFeature(movedPiece, targetSquare);
+            nn.RemoveFeature(capturedPiece, targetSquare);
+
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
 
 
@@ -136,6 +143,9 @@ namespace Axiom.src.core.Board
                 Squares[targetSquare] = promotionPiece;
                 ZobristHash ^= Zobrist.ZobristPieceValues[movedPiece, targetSquare];
                 ZobristHash ^= Zobrist.ZobristPieceValues[promotionPiece, targetSquare];
+
+                nn.RemoveFeature(movedPiece, targetSquare);
+                nn.AddFeature(promotionPiece, targetSquare);
             }
             else if (move.IsEnPassantCapture)
             {
@@ -144,6 +154,8 @@ namespace Axiom.src.core.Board
                 Squares[enPassantCaptureSquare] = Piece.None;
                 BitBoards[capturedPawn] ^= 1UL << enPassantCaptureSquare;
                 ZobristHash ^= Zobrist.ZobristPieceValues[capturedPawn, enPassantCaptureSquare];
+
+                nn.RemoveFeature(capturedPawn, enPassantCaptureSquare);
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -156,6 +168,8 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearWhiteKingsideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 61];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 63];
+                        nn.AddFeature(Piece.WhiteRook, 61);
+                        nn.RemoveFeature(Piece.WhiteRook, 63);
                         break;
                     case 58: // white loing castle (c1)
                         Squares[59] = Squares[56];
@@ -164,6 +178,8 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearWhiteQueensideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 56];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.WhiteRook, 59];
+                        nn.AddFeature(Piece.WhiteRook, 59);
+                        nn.RemoveFeature(Piece.WhiteRook, 56);
                         break;
                     case 6: // black short castle (g8)
                         Squares[5] = Squares[7];
@@ -172,6 +188,8 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearBlackKingsideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 5];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 7];
+                        nn.AddFeature(Piece.BlackRook, 5);
+                        nn.RemoveFeature(Piece.BlackRook, 7);
                         break;
                     case 2: // black long castle (c8)
                         Squares[3] = Squares[0];
@@ -180,6 +198,8 @@ namespace Axiom.src.core.Board
                         castlingRights &= GameState.ClearBlackQueensideMask;
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 0];
                         ZobristHash ^= Zobrist.ZobristPieceValues[Piece.BlackRook, 3];
+                        nn.AddFeature(Piece.BlackRook, 3);
+                        nn.RemoveFeature(Piece.BlackRook, 0);
                         break;
                 }
             }
@@ -207,6 +227,10 @@ namespace Axiom.src.core.Board
             Squares[targetSquare] = capturedPiece;
             BitBoards[movedPiece] ^= 1UL << startSquare | 1UL << targetSquare;
 
+            nn.AddFeature(movedPiece, startSquare);
+            nn.RemoveFeature(movedPiece, targetSquare);
+            nn.AddFeature(capturedPiece, targetSquare);
+
             if (capturedPiece != Piece.None)
             {
                 BitBoards[capturedPiece] |= 1UL << targetSquare;
@@ -221,6 +245,9 @@ namespace Axiom.src.core.Board
                 Squares[startSquare] = movedPawn;
                 BitBoards[movedPiece] ^= 1UL << startSquare;
                 BitBoards[movedPawn] ^= 1UL << startSquare;
+
+                nn.RemoveFeature(movedPiece, startSquare);
+                nn.AddFeature(movedPawn, startSquare);
             }
             else if (move.IsEnPassantCapture)
             {
@@ -228,6 +255,8 @@ namespace Axiom.src.core.Board
                 byte capturedPawn = (byte)(Piece.Pawn | (WhiteToMove ? Piece.Black : Piece.White));
                 Squares[enPassantCaptureSquare] = capturedPawn;
                 BitBoards[Squares[enPassantCaptureSquare]] ^= 1UL << enPassantCaptureSquare;
+
+                nn.AddFeature(capturedPawn, enPassantCaptureSquare);
             }
             else if (move.MoveFlag == Move.CastleFlag)
             {
@@ -237,21 +266,29 @@ namespace Axiom.src.core.Board
                         Squares[63] = Squares[61];
                         Squares[61] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 61 | 1UL << 63;
+                        nn.RemoveFeature(Piece.WhiteRook, 61);
+                        nn.AddFeature(Piece.WhiteRook, 63);
                         break;
                     case 58: // white loing castle (c1)
                         Squares[56] = Squares[59];
                         Squares[59] = Piece.None;
                         BitBoards[Piece.WhiteRook] ^= 1UL << 59 | 1UL << 56;
+                        nn.RemoveFeature(Piece.WhiteRook, 59);
+                        nn.AddFeature(Piece.WhiteRook, 56);
                         break;
                     case 6: // black short castle (g8)
                         Squares[7] = Squares[5];
                         Squares[5] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 5 | 1UL << 7;
+                        nn.RemoveFeature(Piece.BlackRook, 5);
+                        nn.AddFeature(Piece.BlackRook, 7);
                         break;
                     case 2: // black long castle (c8)
                         Squares[0] = Squares[3];
                         Squares[3] = Piece.None;
                         BitBoards[Piece.BlackRook] ^= 1UL << 0 | 1UL << 3;
+                        nn.RemoveFeature(Piece.BlackRook, 3);
+                        nn.AddFeature(Piece.BlackRook, 0);
                         break;
                 }
             }
@@ -456,6 +493,8 @@ namespace Axiom.src.core.Board
                 return false;
             }
         }
+
+        public int Eval => nn.GetOutput(WhiteToMove);
 
         public bool InEndgame(int GamePhase) => GamePhase > 200;
 

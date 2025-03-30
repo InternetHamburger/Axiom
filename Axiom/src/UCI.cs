@@ -53,7 +53,7 @@ namespace Axiom.src
                     Console.WriteLine(Evaluator.Evaluate(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
                     break;
                 case "nneval":
-                    Console.WriteLine(engine.board.nn.GetOutput());
+                    Console.WriteLine(engine.board.nn.GetOutput(engine.board.WhiteToMove));
                     break;
                 case "bench":
                     string[] tokens = input.Split(' ');
