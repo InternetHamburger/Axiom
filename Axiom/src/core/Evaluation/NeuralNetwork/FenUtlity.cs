@@ -1,4 +1,5 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System;
 using System.Collections.Generic;
@@ -50,21 +51,18 @@ namespace Nerual_Network.Chess
             double[] nnInput = new double[64 * 6 * 2];
             for (int i = 0; i < 64; i++)
             {
-                int j = BoardUtility.FlipSquare(i);
-                byte piece = squarePieces[j];
+
+                byte piece = squarePieces[BoardUtility.FlipSquare(i)];
                 if (piece != 0)
                 {
-                    if (piece > Piece.WhiteKing) piece -= 2;
                     if (IsUs)
                     {
-                        int index = 64 * (piece - 1) + i;
-                        nnInput[index] = 1;
+                        nnInput[PreComputedMoveData.NNInputIndicies[0, piece, i]] = 1;
                     }
                     else
                     {
-                        piece += (byte)(piece > Piece.WhiteKing ? -6 : 6);
-                        int index = 64 * (piece - 1) + j;
-                        nnInput[index] = 1;
+
+                        nnInput[PreComputedMoveData.NNInputIndicies[1, piece, i]] = 1;
                     }
                 }
             }

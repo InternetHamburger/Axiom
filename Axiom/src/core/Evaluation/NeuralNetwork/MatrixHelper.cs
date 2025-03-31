@@ -51,9 +51,9 @@ namespace Nerual_Network
             return vectorProduct;
         }
 
-        public static double OutputMatrixVectorMultiplication(double[] matrix, double[] vector)
+        public static int OutputMatrixVectorMultiplication(short[] matrix, int[] vector)
         {
-            double product = 0;
+            int product = 0;
             int count = matrix.Count();
 
             for (int i = 0; i < count; i++)
@@ -97,14 +97,6 @@ namespace Nerual_Network
             for (int i = 0; i < vector.Length; i++)
             {
                 vector[i] += vector2[i];
-            }
-        }
-
-        public static void ApplyActivationFunction(double[] vector)
-        {
-            for (int i = 0; i < vector.Length; i++)
-            {
-                vector[i] = NeuralNetwork.ActivationFunction(vector[i]);
             }
         }
     }
