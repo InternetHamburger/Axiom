@@ -195,7 +195,7 @@ namespace Axiom.src.core.Evaluation
         }
 
 
-        public static int Evaluate(Board.Board board, int GamePhase)
+        public static int EvaluateStatic(Board.Board board, int GamePhase)
         {
             int MGeval = 0;
             int EGeval = 0;
