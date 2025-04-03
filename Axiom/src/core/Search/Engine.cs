@@ -15,7 +15,7 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        const int sizeTTMb = 1024;
+        const int sizeTTMb = 16;
         const int sizeTTEntry = 16;
         const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
 
@@ -102,10 +102,16 @@ namespace Axiom.src.core.Search
         private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
             SearchedNodes++;
+            if (board.IsTwofoldRepetition() && plyFromRoot > 0)
+            {
+                return 0;
+            }
             if (depth == 0)
             {
-                return board.Eval;
+                return Quiecence(alpha, beta);
             }
+
+
 
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
@@ -171,6 +177,8 @@ namespace Axiom.src.core.Search
 
                 board.UndoMove(move);
 
+                
+
                 if (score > maxScore)
                 {
 
@@ -187,6 +195,8 @@ namespace Axiom.src.core.Search
                         alpha = score;
                     }
                 }
+
+                if (IsTimeUp || SearchedNodes >= NodeLimit) return 0;
 
                 if (score >= beta)
                 {
@@ -210,6 +220,64 @@ namespace Axiom.src.core.Search
 
             return maxScore;
         }
+
+        private int Quiecence(int alpha, int beta)
+        {
+            SearchedNodes++;
+            int standingPat = Evaluator.EvaluateStatic(board, GamePhase);
+
+            if (standingPat >= beta)
+            {
+                return standingPat;
+            }
+
+            if (alpha < standingPat)
+            {
+                alpha = standingPat;
+            }
+
+            Move[] captureMoves = MoveGenerator.GetPseudoLegalCaptures(board);
+            moveOrderer.OrderCaptures(captureMoves, board);
+
+            if (IsTimeUp)
+            {
+                return standingPat;
+            }
+            int bestScore = standingPat;
+            foreach (Move move in captureMoves)
+            {
+                // No need to filter illegal castling moves
+                // as they are not generated in qSearch
+
+                board.MakeMove(move);
+
+                // Filter illegal moves
+                if (board.IsInCheck(!board.WhiteToMove))
+                {
+                    board.UndoMove(move);
+                    continue;
+                }
+
+                int score = -Quiecence(-beta, -alpha);
+                board.UndoMove(move);
+
+                if (score >= beta)
+                {
+                    return score;
+                }
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    if (score > alpha)
+                    {
+                        alpha = score;
+                    }
+                }
+            }
+
+            return bestScore;
+        }
+
 
         static int PhaseScore(byte piece)
         {

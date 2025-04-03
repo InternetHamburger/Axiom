@@ -36,6 +36,9 @@ namespace Axiom.src
                 case "position":
                     HandlePositionCommand(input);
                     break;
+                case "ucinewgame":
+                    engine = new();
+                    break;
                 case "go":
                     HandleGoCommand(input);
                     break;
@@ -45,15 +48,12 @@ namespace Axiom.src
                     Console.WriteLine("\nFen: " + engine.board.Fen);
                     Console.WriteLine("Hash: " + engine.board.ZobristHash);
                     break;
-                case "r":
-                    Console.WriteLine(BoardUtility.FlipSquare(63));
-                    break;
                 case "eval":
                     engine.CalculateGamePhase();
                     Console.WriteLine(Evaluator.EvaluateStatic(engine.board, engine.GamePhase) * (engine.board.WhiteToMove ? 1 : -1));
                     break;
                 case "nneval":
-                    //Console.WriteLine(engine.evaluator.EvaluateNN(engine.board));
+                    Console.WriteLine(engine.board.Eval);
                     break;
                 case "bench":
                     string[] tokens = input.Split(' ');
