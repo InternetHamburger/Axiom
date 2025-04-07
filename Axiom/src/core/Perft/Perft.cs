@@ -2,7 +2,6 @@
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Axiom.src.core.Perft
@@ -10,17 +9,12 @@ namespace Axiom.src.core.Perft
     static class Perft
     {
 
-        public const string path = @"Axiom.src.core.Perft.perftsuite.edp";
+        public const string perftSuitePath = @"C:\Users\Sindr\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
 
         public static void RunSuite(int maxDepth = 6)
         {
-
-            Assembly assembly = Assembly.GetExecutingAssembly();
-
-            using Stream stream = assembly.GetManifestResourceStream(path);
-            using StreamReader reader = new StreamReader(stream);
-
             Console.WriteLine($"Running Test with depth {maxDepth}...\n");
+            using StreamReader reader = new(perftSuitePath);
 
             string? line = reader.ReadLine();
 
