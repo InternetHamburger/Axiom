@@ -4,6 +4,7 @@ using Axiom.src.core.Utility;
 using Nerual_Network.Chess;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Text.Json;
 
@@ -115,43 +116,44 @@ namespace Nerual_Network.Setup
 
         public void LoadFromFile(string filePath, int hlSize)
         {
-            
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("The specified file does not exist.");
-            }
+            Assembly assembly = Assembly.GetExecutingAssembly();
 
-            byte[] bytes = File.ReadAllBytes(filePath);
+            using (Stream stream = assembly.GetManifestResourceStream(filePath))
+            {
 
-            int floatCount = bytes.Length / 2;
-            short[] weights = new short[floatCount];
-            // Load the weights and biases
-            for (int i = 0; i < floatCount; i++)
-            {
-                weights[i] = BitConverter.ToInt16(bytes, i * 2);
-            }
-            for (int i = 0; i < inputSize; i++)
-            {
-                for (int j = 0; j < hlSize; j++) 
+                using BinaryReader reader = new BinaryReader(stream);
+                byte[] bytes = reader.ReadBytes((int)stream.Length);
+
+                int floatCount = bytes.Length / 2;
+                short[] weights = new short[floatCount];
+                // Load the weights and biases
+                for (int i = 0; i < floatCount; i++)
                 {
-                    HlWeightMatrix[i][j] = (short)weights[hlSize * i + j];
+                    weights[i] = BitConverter.ToInt16(bytes, i * 2);
                 }
+                for (int i = 0; i < inputSize; i++)
+                {
+                    for (int j = 0; j < hlSize; j++)
+                    {
+                        HlWeightMatrix[i][j] = (short)weights[hlSize * i + j];
+                    }
+                }
+                for (int i = 0; i < hlSize; i++)
+                {
+                    HlBiasVector[i] = (short)weights[inputSize * hlSize + i];
+                    StmAccumulator[i] = HlBiasVector[i];
+                    NstmAccumulator[i] = HlBiasVector[i];
+                }
+                for (int i = 0; i < hlSize; i++)
+                {
+                    OutputWeightVectorUs[i] = (short)weights[(inputSize + 1) * hlSize + i];
+                }
+                for (int i = 0; i < hlSize; i++)
+                {
+                    OutputWeightVectorThem[i] = (short)weights[(inputSize + 2) * hlSize + i];
+                }
+                OutputBias = (short)weights[(inputSize + 3) * hlSize];
             }
-            for (int i = 0; i < hlSize; i++)
-            {
-                HlBiasVector[i] = (short)weights[inputSize * hlSize + i];
-                StmAccumulator[i] = HlBiasVector[i];
-                NstmAccumulator[i] = HlBiasVector[i];
-            }
-            for (int i = 0; i < hlSize; i++)
-            {
-                OutputWeightVectorUs[i] = (short)weights[(inputSize + 1) * hlSize + i];
-            }
-            for (int i = 0; i < hlSize; i++)
-            {
-                OutputWeightVectorThem[i] = (short)weights[(inputSize + 2) * hlSize + i];
-            }
-            OutputBias = (short)weights[(inputSize + 3) * hlSize];
         }
     }
 }
