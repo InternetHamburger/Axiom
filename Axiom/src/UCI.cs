@@ -36,6 +36,9 @@ namespace Axiom.src
                 case "position":
                     HandlePositionCommand(input);
                     break;
+                case "setoption":
+                    Setoption(input);
+                    break;
                 case "go":
                     HandleGoCommand(input);
                     break;
@@ -74,7 +77,24 @@ namespace Axiom.src
         private static void RespondUCI()
         {
             Console.WriteLine("id name Axiom");
+            Console.WriteLine("option name Hash type spin default 32 min 1 max 4096");
             Console.WriteLine("uciok");
+        }
+
+        private void Setoption(string input)
+        {
+            string[] tokens = input.Split(" ");
+            string optionType = tokens[2];
+            string value = tokens[4];
+            switch (optionType)
+            {
+                case "Hash":
+                    engine.SetTTSize(int.Parse(value));
+                    break;
+                default:
+                    Console.WriteLine($"Unknown option {optionType}");
+                    break;
+            }
         }
 
         private void HandlePositionCommand(string input)

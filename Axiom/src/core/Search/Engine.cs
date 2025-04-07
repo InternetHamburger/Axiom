@@ -14,9 +14,9 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        const int sizeTTMb = 32;
+        public int sizeTTMb = 32;
         const int sizeTTEntry = 16;
-        const ulong numTTEntries = sizeTTMb * 1024 * 1024 / sizeTTEntry;
+        ulong numTTEntries;
 
         public int GamePhase;
         public const int TotalPhase = 24;
@@ -41,6 +41,9 @@ namespace Axiom.src.core.Search
 
         public Engine()
         {
+            sizeTTMb = 32;
+            numTTEntries = (ulong)sizeTTMb * 1024 * 1024 / sizeTTEntry;
+
             board = new Board.Board();
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
@@ -52,6 +55,14 @@ namespace Axiom.src.core.Search
         {
             board = new Board.Board(fen);
             InitSearch();
+        }
+
+        public void SetTTSize(int mb)
+        {
+            sizeTTMb = mb;
+            numTTEntries = (ulong)sizeTTMb * 1024 * 1024 / sizeTTEntry;
+
+            TT = new TTEntry[numTTEntries];
         }
 
         public void Search(int depthlimit, int timelimit = int.MaxValue, int nodeLimit = int.MaxValue)
