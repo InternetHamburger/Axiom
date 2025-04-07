@@ -4,6 +4,7 @@ using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Security;
 
 namespace Axiom.src.core.Search
 {
@@ -187,10 +188,11 @@ namespace Axiom.src.core.Search
                     return 0;
                 }
             }
+            bool IsPvNode = beta - alpha > 1;
             bool InCheck = board.IsInCheck(board.WhiteToMove);
             int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
-            if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
+            if (!InCheck && !IsPvNode && depth <= 7 && staticEval >= beta + margin)
             {   
                 return staticEval; // fail soft
             }
