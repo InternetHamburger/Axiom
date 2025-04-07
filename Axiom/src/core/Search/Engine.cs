@@ -45,7 +45,7 @@ namespace Axiom.src.core.Search
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
             printInfo = true;
-            NegaMax(1, 0, NegativeInf, PositiveInf);
+            //NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
         public void SetPosition(string fen)
@@ -158,7 +158,7 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return beta; // Cutoff with the lower bound score
+                    return beta;
                 }
             }
 
@@ -177,7 +177,7 @@ namespace Axiom.src.core.Search
                 }
             }
             bool InCheck = board.IsInCheck(board.WhiteToMove);
-            int staticEval = Evaluator.EvaluateStatic(board, GamePhase);
+            int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
             {   
@@ -306,11 +306,7 @@ namespace Axiom.src.core.Search
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
-                    else
-                    {
-                        
-                    }
-                        TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
+                    TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return bestScore; // Return beta on cutoff
                 }
             }
@@ -341,7 +337,7 @@ namespace Axiom.src.core.Search
         private int Quiecence(int alpha, int beta)
         {
             SearchedNodes++;
-            int standingPat = Evaluator.EvaluateStatic(board, GamePhase);
+            int standingPat = board.Eval;
 
             if (standingPat >= beta)
             {
