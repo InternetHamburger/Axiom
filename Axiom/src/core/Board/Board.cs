@@ -30,7 +30,7 @@ namespace Axiom.src.core.Board
         {
             
             nn = new(768, HlSize);
-            nn.LoadFromFile("C:/c/beans.bin", HlSize);
+            nn.LoadFromFile("Axiom.src.core.Evaluation.NeuralNetwork.Setup.beans.bin", HlSize);
             Squares = new byte[64];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];

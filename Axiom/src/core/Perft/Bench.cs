@@ -2,17 +2,23 @@
 using Axiom.src.core.Utility;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace Axiom.src.core.Perft
 {
     static class Bench
     {
-        public const string benchPath = @"C:\Users\Sindre Wolden\source\repos\Axiom\Axiom\src\core\Perft\perftsuite.edp";
+        public const string path = @"Axiom.src.core.Perft.perftsuite.edp";
 
         public static void RunSuite(int maxDepth = 10)
         {
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            using Stream stream = assembly.GetManifestResourceStream(path);
+            using StreamReader reader = new StreamReader(stream);
+
             Console.WriteLine($"Running Test with depth {maxDepth}...\n");
-            using StreamReader reader = new(benchPath);
 
             string? line = reader.ReadLine();
 
@@ -39,7 +45,7 @@ namespace Axiom.src.core.Perft
                     {
                         totalPositions += (ulong)engine.SearchedNodes;
                     }
-                    
+
 
                     Console.WriteLine($"Depth {i} ply  Result: {engine.SearchedNodes}  Time: {watch.ElapsedMilliseconds} bestmove: {BoardUtility.MoveToUci(engine.bestMoveThisIteration)}");
                 }
@@ -52,6 +58,8 @@ namespace Axiom.src.core.Perft
             Console.WriteLine("Total ms elpased: " + total.ElapsedMilliseconds);
             Console.WriteLine("Total positions: " + totalPositions);
             Console.WriteLine("Knps: " + totalPositions / (ulong)total.ElapsedMilliseconds);
+
+
         }
 
         public static (int, ulong)[] ExtractDepthValues(string line)
