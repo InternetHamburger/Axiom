@@ -56,7 +56,8 @@ namespace Axiom.src.core.Perft
 
             total.Stop();
             Console.WriteLine("Total ms elpased: " + total.ElapsedMilliseconds);
-            Console.WriteLine("Total positions: " + totalPositions);
+            Console.WriteLine("Total nodes: " + totalPositions);
+            Console.WriteLine("Total positions: " + num);
             Console.WriteLine("Knps: " + totalPositions / (ulong)total.ElapsedMilliseconds);
 
 
