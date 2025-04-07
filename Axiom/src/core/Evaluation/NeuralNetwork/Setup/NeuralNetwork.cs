@@ -49,46 +49,48 @@ namespace Nerual_Network.Setup
 
         public static int ActivationFunction(int x)
         {
-            double a = x;
-            return (int)Math.Pow(Math.Clamp(a, 0, QA), 2);
+            int clamped = Math.Clamp(x, 0, QA);
+            return clamped * clamped;
         }
 
         public int GetOutput(bool WhiteToMove)
         {
-            int[] accumulatorUs = new int[hlSize];
-            int[] accumulatorThem = new int[hlSize];
+            int[] accUs = new int[hlSize];
+            int[] accThem = new int[hlSize];
+
+            int[] fromUs = WhiteToMove ? StmAccumulator : NstmAccumulator;
+            int[] fromThem = WhiteToMove ? NstmAccumulator : StmAccumulator;
 
             for (int i = 0; i < hlSize; i++)
             {
-                if (WhiteToMove)
-                {
-                    accumulatorUs[i] = ActivationFunction(StmAccumulator[i]);
-                    accumulatorThem[i] = ActivationFunction(NstmAccumulator[i]);
-                }
-                else
-                {
-                    accumulatorUs[i] = ActivationFunction(NstmAccumulator[i]);
-                    accumulatorThem[i] = ActivationFunction(StmAccumulator[i]);
-                }
-                
+                accUs[i] = ActivationFunction(fromUs[i]);
+                accThem[i] = ActivationFunction(fromThem[i]);
             }
 
-            int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accumulatorUs);
-            output += MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accumulatorThem);
-            output /= QA;
-            output += OutputBias;
+            int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accUs)
+                       + MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accThem);
+
+            output = output / QA + OutputBias;
+
             return output * EvalScale / (QA * QB);
         }
+
 
         public void AddFeature(int piece, int square)
         {
             if (piece == 0) return;
             square = BoardUtility.FlipSquare(square);
+
+            int idx0 = PreComputedMoveData.NNInputIndicies[0, piece, square];
+            int idx1 = PreComputedMoveData.NNInputIndicies[1, piece, square];
+
+            short[] weights0 = HlWeightMatrix[idx0];
+            short[] weights1 = HlWeightMatrix[idx1];
+
             for (int i = 0; i < hlSize; i++)
             {
-                
-                StmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];
-                NstmAccumulator[i] += HlWeightMatrix[PreComputedMoveData.NNInputIndicies[1, piece, square]][i];
+                StmAccumulator[i] += weights0[i];
+                NstmAccumulator[i] += weights1[i];
             }
         }
 
@@ -96,12 +98,20 @@ namespace Nerual_Network.Setup
         {
             if (piece == 0) return;
             square = BoardUtility.FlipSquare(square);
+
+            int idx0 = PreComputedMoveData.NNInputIndicies[0, piece, square];
+            int idx1 = PreComputedMoveData.NNInputIndicies[1, piece, square];
+
+            short[] weights0 = HlWeightMatrix[idx0];
+            short[] weights1 = HlWeightMatrix[idx1];
+
             for (int i = 0; i < hlSize; i++)
             {
-                StmAccumulator[i] -= HlWeightMatrix[PreComputedMoveData.NNInputIndicies[0, piece, square]][i];
-                NstmAccumulator[i] -= HlWeightMatrix[PreComputedMoveData.NNInputIndicies[1, piece, square]][i];
+                StmAccumulator[i] -= weights0[i];
+                NstmAccumulator[i] -= weights1[i];
             }
         }
+
 
         public void LoadFromFile(string filePath, int hlSize)
         {

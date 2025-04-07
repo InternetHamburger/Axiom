@@ -158,14 +158,14 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return alpha;
+                    return beta;
                 }
             }
 
             SearchedNodes++;
             if (depth <= 0)
             {
-                return board.Eval;
+                return Quiecence(alpha, beta);
             }
 
             // Not in root node
@@ -306,11 +306,7 @@ namespace Axiom.src.core.Search
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
-                    else
-                    {
-                        
-                    }
-                        TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
+                    TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
                     return bestScore; // Return beta on cutoff
                 }
             }
