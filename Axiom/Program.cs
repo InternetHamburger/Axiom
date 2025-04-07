@@ -12,7 +12,6 @@ namespace Axiom
     {
         static void Main()
         {
-            Perft.RunSuite(5);
             UCI uci = new();
 
             string? message = Console.ReadLine();
