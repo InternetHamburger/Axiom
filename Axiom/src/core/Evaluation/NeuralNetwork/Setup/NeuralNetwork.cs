@@ -49,10 +49,41 @@ namespace Nerual_Network.Setup
             this.hlSize = hlSize;
         }
 
-        public static int ActivationFunction(int x)
+        public static void ActivationFunction(int[] accUs, int[] accThem, int[] fromUs, int[] fromThem)
         {
-            int clamped = Math.Clamp(x, 0, QA);
-            return clamped * clamped;
+            int simdWidth = Vector<int>.Count;
+
+            Vector<int> zero = Vector<int>.Zero;
+            Vector<int> qaVec = new Vector<int>(QA);
+
+            int i = 0;
+            for (; i <= fromUs.Length - simdWidth; i += simdWidth)
+            {
+                // Load vectors
+                var vUs = new Vector<int>(fromUs, i);
+                var vThem = new Vector<int>(fromThem, i);
+
+                // Clamp to [0, QA]
+                vUs = Vector.Min(Vector.Max(vUs, zero), qaVec);
+                vThem = Vector.Min(Vector.Max(vThem, zero), qaVec);
+
+                // Square the clamped values
+                var vUsSq = vUs * vUs;
+                var vThemSq = vThem * vThem;
+
+                // Store back
+                vUsSq.CopyTo(accUs, i);
+                vThemSq.CopyTo(accThem, i);
+            }
+
+            // Handle remaining elements
+            for (; i < fromUs.Length; i++)
+            {
+                int us = Math.Clamp(fromUs[i], 0, QA);
+                int them = Math.Clamp(fromThem[i], 0, QA);
+                accUs[i] = us * us;
+                accThem[i] = them * them;
+            }
         }
 
         public int GetOutput(bool WhiteToMove)
@@ -63,11 +94,7 @@ namespace Nerual_Network.Setup
             int[] fromUs = WhiteToMove ? StmAccumulator : NstmAccumulator;
             int[] fromThem = WhiteToMove ? NstmAccumulator : StmAccumulator;
 
-            for (int i = 0; i < hlSize; i++)
-            {
-                accUs[i] = ActivationFunction(fromUs[i]);
-                accThem[i] = ActivationFunction(fromThem[i]);
-            }
+            ActivationFunction(accUs, accThem, fromUs, fromThem);
 
             int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accUs)
                        + MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accThem);
@@ -75,6 +102,8 @@ namespace Nerual_Network.Setup
             output = output / QA + OutputBias;
 
             return output * EvalScale / (QA * QB);
+
+
         }
 
 
