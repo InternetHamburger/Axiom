@@ -5,6 +5,7 @@ using Nerual_Network.Chess;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Text.Json;
 
@@ -48,10 +49,41 @@ namespace Nerual_Network.Setup
             this.hlSize = hlSize;
         }
 
-        public static int ActivationFunction(int x)
+        public static void ActivationFunction(int[] accUs, int[] accThem, int[] fromUs, int[] fromThem)
         {
-            int clamped = Math.Clamp(x, 0, QA);
-            return clamped * clamped;
+            int simdWidth = Vector<int>.Count;
+
+            Vector<int> zero = Vector<int>.Zero;
+            Vector<int> qaVec = new Vector<int>(QA);
+
+            int i = 0;
+            for (; i <= fromUs.Length - simdWidth; i += simdWidth)
+            {
+                // Load vectors
+                var vUs = new Vector<int>(fromUs, i);
+                var vThem = new Vector<int>(fromThem, i);
+
+                // Clamp to [0, QA]
+                vUs = Vector.Min(Vector.Max(vUs, zero), qaVec);
+                vThem = Vector.Min(Vector.Max(vThem, zero), qaVec);
+
+                // Square the clamped values
+                var vUsSq = vUs * vUs;
+                var vThemSq = vThem * vThem;
+
+                // Store back
+                vUsSq.CopyTo(accUs, i);
+                vThemSq.CopyTo(accThem, i);
+            }
+
+            // Handle remaining elements
+            for (; i < fromUs.Length; i++)
+            {
+                int us = Math.Clamp(fromUs[i], 0, QA);
+                int them = Math.Clamp(fromThem[i], 0, QA);
+                accUs[i] = us * us;
+                accThem[i] = them * them;
+            }
         }
 
         public int GetOutput(bool WhiteToMove)
@@ -62,11 +94,7 @@ namespace Nerual_Network.Setup
             int[] fromUs = WhiteToMove ? StmAccumulator : NstmAccumulator;
             int[] fromThem = WhiteToMove ? NstmAccumulator : StmAccumulator;
 
-            for (int i = 0; i < hlSize; i++)
-            {
-                accUs[i] = ActivationFunction(fromUs[i]);
-                accThem[i] = ActivationFunction(fromThem[i]);
-            }
+            ActivationFunction(accUs, accThem, fromUs, fromThem);
 
             int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accUs)
                        + MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accThem);
@@ -74,6 +102,8 @@ namespace Nerual_Network.Setup
             output = output / QA + OutputBias;
 
             return output * EvalScale / (QA * QB);
+
+
         }
 
 
@@ -88,10 +118,28 @@ namespace Nerual_Network.Setup
             short[] weights0 = HlWeightMatrix[idx0];
             short[] weights1 = HlWeightMatrix[idx1];
 
-            for (int i = 0; i < hlSize; i++)
+            int simdWidth = Vector<short>.Count; // Typically 8 or 16 depending on hardware
+            for (int i = 0; i < hlSize; i += simdWidth)
             {
-                StmAccumulator[i] += weights0[i];
-                NstmAccumulator[i] += weights1[i];
+                // Load short vectors
+                var w0Short = new Vector<short>(weights0, i);
+                var w1Short = new Vector<short>(weights1, i);
+
+                // Widen to int (produces 2 Vector<int> halves)
+                Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
+                Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
+
+                // Load accumulator ints
+                var acc0Lo = new Vector<int>(StmAccumulator, i);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc1Lo = new Vector<int>(NstmAccumulator, i);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+
+                // Add
+                (acc0Lo + w0Lo).CopyTo(StmAccumulator, i);
+                (acc0Hi + w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc1Lo + w1Lo).CopyTo(NstmAccumulator, i);
+                (acc1Hi + w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
             }
         }
 
@@ -106,10 +154,24 @@ namespace Nerual_Network.Setup
             short[] weights0 = HlWeightMatrix[idx0];
             short[] weights1 = HlWeightMatrix[idx1];
 
-            for (int i = 0; i < hlSize; i++)
+            int simdWidth = Vector<short>.Count;
+            for (int i = 0; i < hlSize; i += simdWidth)
             {
-                StmAccumulator[i] -= weights0[i];
-                NstmAccumulator[i] -= weights1[i];
+                var w0Short = new Vector<short>(weights0, i);
+                var w1Short = new Vector<short>(weights1, i);
+
+                Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
+                Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
+
+                var acc0Lo = new Vector<int>(StmAccumulator, i);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc1Lo = new Vector<int>(NstmAccumulator, i);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+
+                (acc0Lo - w0Lo).CopyTo(StmAccumulator, i);
+                (acc0Hi - w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc1Lo - w1Lo).CopyTo(NstmAccumulator, i);
+                (acc1Hi - w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
             }
         }
 

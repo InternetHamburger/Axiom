@@ -53,15 +53,30 @@ namespace Nerual_Network
 
         public static int OutputMatrixVectorMultiplication(short[] matrix, int[] vector)
         {
-            int product = 0;
-            int count = matrix.Count();
+            int simdWidth = Vector<short>.Count;
+            int sum = 0;
+            int i = 0;
 
-            for (int i = 0; i < count; i++)
+            // SIMD part
+            for (; i <= matrix.Length - simdWidth; i += simdWidth)
             {
-                product += matrix[i] * vector[i];
+                var mVec = new Vector<short>(matrix, i);
+                Vector.Widen(mVec, out var mLo, out var mHi);
+
+                var vLo = new Vector<int>(vector, i);
+                var vHi = new Vector<int>(vector, i + simdWidth / 2);
+
+                sum += Vector.Dot(mLo, vLo);
+                sum += Vector.Dot(mHi, vHi);
             }
-            
-            return product;
+
+            // Scalar fallback for leftovers
+            for (; i < matrix.Length; i++)
+            {
+                sum += matrix[i] * vector[i];
+            }
+
+            return sum;
         }
 
         public static double[] VectorScaling(double[] vector, double scalar)
