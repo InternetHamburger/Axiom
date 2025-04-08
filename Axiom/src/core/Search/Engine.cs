@@ -265,7 +265,7 @@ namespace Axiom.src.core.Search
                 int futilitymargin = 200 * depth; // Dynamic futility margin
 
                 // Futility pruning: skip moves unlikely to raise alpha
-                if (depth <= 3 && staticEval + futilitymargin <= alpha && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
+                if (depth <= 3 && staticEval + futilitymargin <= alpha && !isCapture && !InCheck && i > 0 && !move.IsPromotion && plyFromRoot > 0)
                 {
                     board.UndoMove(move);
                     continue;
