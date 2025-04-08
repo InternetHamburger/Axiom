@@ -5,6 +5,7 @@ using Nerual_Network.Chess;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Text.Json;
 
@@ -88,10 +89,28 @@ namespace Nerual_Network.Setup
             short[] weights0 = HlWeightMatrix[idx0];
             short[] weights1 = HlWeightMatrix[idx1];
 
-            for (int i = 0; i < hlSize; i++)
+            int simdWidth = Vector<short>.Count; // Typically 8 or 16 depending on hardware
+            for (int i = 0; i < hlSize; i += simdWidth)
             {
-                StmAccumulator[i] += weights0[i];
-                NstmAccumulator[i] += weights1[i];
+                // Load short vectors
+                var w0Short = new Vector<short>(weights0, i);
+                var w1Short = new Vector<short>(weights1, i);
+
+                // Widen to int (produces 2 Vector<int> halves)
+                Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
+                Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
+
+                // Load accumulator ints
+                var acc0Lo = new Vector<int>(StmAccumulator, i);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc1Lo = new Vector<int>(NstmAccumulator, i);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+
+                // Add
+                (acc0Lo + w0Lo).CopyTo(StmAccumulator, i);
+                (acc0Hi + w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc1Lo + w1Lo).CopyTo(NstmAccumulator, i);
+                (acc1Hi + w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
             }
         }
 
@@ -106,10 +125,24 @@ namespace Nerual_Network.Setup
             short[] weights0 = HlWeightMatrix[idx0];
             short[] weights1 = HlWeightMatrix[idx1];
 
-            for (int i = 0; i < hlSize; i++)
+            int simdWidth = Vector<short>.Count;
+            for (int i = 0; i < hlSize; i += simdWidth)
             {
-                StmAccumulator[i] -= weights0[i];
-                NstmAccumulator[i] -= weights1[i];
+                var w0Short = new Vector<short>(weights0, i);
+                var w1Short = new Vector<short>(weights1, i);
+
+                Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
+                Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
+
+                var acc0Lo = new Vector<int>(StmAccumulator, i);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc1Lo = new Vector<int>(NstmAccumulator, i);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+
+                (acc0Lo - w0Lo).CopyTo(StmAccumulator, i);
+                (acc0Hi - w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc1Lo - w1Lo).CopyTo(NstmAccumulator, i);
+                (acc1Hi - w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
             }
         }
 
