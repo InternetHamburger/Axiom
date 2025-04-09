@@ -29,12 +29,12 @@ namespace Axiom.src.core.Evaluation
             Array.Sort(moves, (a, b) => CaptureScore(b, board).CompareTo(CaptureScore(a, board)));
         }
 
-        static int CaptureScoreDelta(Move move, Board.Board board)
+        private static int CaptureScoreDelta(Move move, Board.Board board)
         {
-            return 100 * MoveOrderPieceValue(board.Squares[move.TargetSquare]) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
+            return (100 * MoveOrderPieceValue(board.Squares[move.TargetSquare])) - MoveOrderPieceValue(board.Squares[move.StartSquare]);
         }
 
-        static int MoveOrderPieceValue(byte piece)
+        private static int MoveOrderPieceValue(byte piece)
         {
             return Piece.PieceType(piece) switch
             {
@@ -47,7 +47,7 @@ namespace Axiom.src.core.Evaluation
             };
         }
 
-        int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
+        private int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
         {
             if (Move.SameMove(ttMove, move))
             {
@@ -73,7 +73,7 @@ namespace Axiom.src.core.Evaluation
             }
         }
 
-        static int CaptureScore(Move move, Board.Board board)
+        private static int CaptureScore(Move move, Board.Board board)
         {
             int captureMaterialDelta = CaptureScoreDelta(move, board);
             int moveScore = captureMaterialDelta;
@@ -86,7 +86,7 @@ namespace Axiom.src.core.Evaluation
             int index1 = board.WhiteToMove ? 0 : 1;
             int index2 = board.Squares[move.TargetSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + 3 * depth * depth, 0, 10000);
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + (3 * depth * depth), 0, 10000);
         }
 
         public void UpdateHistoryTableAlphaRaise(Board.Board board, Move move, int depth)
@@ -94,7 +94,7 @@ namespace Axiom.src.core.Evaluation
             int index1 = board.WhiteToMove ? 0 : 1;
             int index2 = board.Squares[move.TargetSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + 2 * depth, 0, 10000);
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + (2 * depth), 0, 10000);
         }
     }
 }

@@ -1,16 +1,10 @@
 ﻿using Axiom.src;
-using Axiom.src.core.Board;
-using Axiom.src.core.Move_Generation;
-using Axiom.src.core.Perft;
-using Nerual_Network.Chess;
-using Nerual_Network.Setup;
-using System.Numerics;
 
 namespace Axiom
 {
     internal class Program
     {
-        static void Main()
+        private static void Main()
         {
             UCI uci = new();
 

@@ -2,7 +2,6 @@
 using Axiom.src.core.Evaluation;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Axiom.src.core.Search
@@ -11,12 +10,12 @@ namespace Axiom.src.core.Search
     {
 
 
-        const int PositiveInf = 999999999;
-        const int NegativeInf = -999999999;
+        private const int PositiveInf = 999999999;
+        private const int NegativeInf = -999999999;
 
         public int sizeTTMb = 32;
-        const int sizeTTEntry = 16;
-        ulong numTTEntries;
+        private const int sizeTTEntry = 16;
+        private ulong numTTEntries;
 
         public int GamePhase;
         public const int TotalPhase = 24;
@@ -86,7 +85,7 @@ namespace Axiom.src.core.Search
 
                 // Initial call
                 // Very tight bounds, but pays off
-                NegaMax(depth, 0, alpha, beta);
+                _ = NegaMax(depth, 0, alpha, beta);
                 maxDepth = depth;
                 int numReSearches = 0;
 
@@ -97,12 +96,12 @@ namespace Axiom.src.core.Search
                         if (currentEval >= beta)
                         {
                             alpha = eval - delta;
-                            NegaMax(depth, 0, alpha, PositiveInf);
+                            _ = NegaMax(depth, 0, alpha, PositiveInf);
                         }
                         else if (currentEval <= alpha)
                         {
                             beta = eval + delta;
-                            NegaMax(depth, 0, NegativeInf, beta);
+                            _ = NegaMax(depth, 0, NegativeInf, beta);
                         }
                         break;
                     }
@@ -110,13 +109,13 @@ namespace Axiom.src.core.Search
                     {
                         alpha = eval - delta;
                         beta += 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
+                        _ = NegaMax(depth, 0, alpha, beta);
                     }
                     else if (currentEval <= alpha)
                     {
                         beta = eval + delta;
                         alpha -= 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
+                        _ = NegaMax(depth, 0, alpha, beta);
                     }
                     numReSearches++;
                 }
@@ -191,7 +190,7 @@ namespace Axiom.src.core.Search
             int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
-            {   
+            {
                 return staticEval; // fail soft
             }
             // Null Move Pruning
@@ -221,7 +220,7 @@ namespace Axiom.src.core.Search
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
-                
+
 
                 // Filter illegal castling moves
                 if (move.MoveFlag == Move.CastleFlag)
@@ -334,14 +333,9 @@ namespace Axiom.src.core.Search
 
 
 
-            if (alphaWasRaised)
-            {
-                TT[TTIndex] = new(bestScore, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash);
-            }
-            else
-            {
-                TT[TTIndex] = new(bestScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
-            }
+            TT[TTIndex] = alphaWasRaised
+                ? new(bestScore, depth, TTEntry.ExactFlag, bestMove.Value, board.ZobristHash)
+                : new(bestScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
             return bestScore;
         }
 
@@ -402,7 +396,7 @@ namespace Axiom.src.core.Search
             return bestScore;
         }
 
-        static int PhaseScore(byte piece)
+        private static int PhaseScore(byte piece)
         {
             return Piece.PieceType(piece) switch
             {
@@ -430,7 +424,7 @@ namespace Axiom.src.core.Search
             string pv = "";
             ulong hash = board.ZobristHash;
             int depth = 0; // Prevent infinite loops
-            List<Move> playedMoves = new List<Move>(); // Store played moves for undoing
+            List<Move> playedMoves = []; // Store played moves for undoing
 
             while (depth < maxDepth)
             {
@@ -457,6 +451,6 @@ namespace Axiom.src.core.Search
 
             return pv.Trim();
         }
-        bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;
+        private bool IsTimeUp => DateTime.Now.TimeOfDay.TotalMilliseconds - startTime > timeLimit;
     }
 }

@@ -62,7 +62,7 @@ namespace Axiom.src.core.Move_Generation
                 for (int n = 0; n < MoveGenConstants.numSquaresToEdge[square, directionIndex]; n++)
                 {
 
-                    int targetSquare = square + MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1);
+                    int targetSquare = square + (MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1));
                     byte pieceOnTargetSquare = board.Squares[targetSquare];
 
                     // Blocked by friendly piece
@@ -429,7 +429,7 @@ namespace Axiom.src.core.Move_Generation
                 for (int n = 0; n < MoveGenConstants.numSquaresToEdge[square, directionIndex]; n++)
                 {
 
-                    int targetSquare = square + MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1);
+                    int targetSquare = square + (MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1));
                     byte pieceOnTargetSquare = board.Squares[targetSquare];
 
                     // Blocked by friendly piece

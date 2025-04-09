@@ -3,7 +3,7 @@
     public readonly struct Move
     {
         // 16bit move value
-        readonly ushort moveValue;
+        private readonly ushort moveValue;
 
         // Flags
         public const int NoFlag = 0b0000;
@@ -17,9 +17,9 @@
         public const int PromoteToBishopFlag = 0b0111;
 
         // Masks
-        const ushort startSquareMask = 0b0000000000111111;
-        const ushort targetSquareMask = 0b0000111111000000;
-        const ushort flagMask = 0b1111000000000000;
+        private const ushort startSquareMask = 0b0000000000111111;
+        private const ushort targetSquareMask = 0b0000111111000000;
+        private const ushort flagMask = 0b1111000000000000;
 
         public Move(ushort moveValue)
         {
@@ -28,12 +28,12 @@
 
         public Move(int startSquare, int targetSquare)
         {
-            moveValue = (ushort)(startSquare | targetSquare << 6);
+            moveValue = (ushort)(startSquare | (targetSquare << 6));
         }
 
         public Move(int startSquare, int targetSquare, int flag)
         {
-            moveValue = (ushort)(startSquare | targetSquare << 6 | flag << 12);
+            moveValue = (ushort)(startSquare | (targetSquare << 6) | (flag << 12));
         }
 
         public ushort Value => moveValue;

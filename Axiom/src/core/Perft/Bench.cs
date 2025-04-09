@@ -1,12 +1,12 @@
 ﻿using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Axiom.src.core.Perft
 {
-    static class Bench
+    internal static class Bench
     {
         public const string path = @"Axiom.src.core.Perft.perftsuite.edp";
 
@@ -27,8 +27,10 @@ namespace Axiom.src.core.Perft
             total.Start();
             ulong totalPositions = 0;
 
-            Engine engine = new();
-            engine.printInfo = false;
+            Engine engine = new()
+            {
+                printInfo = false
+            };
             while (line != null)
             {
                 num++;
@@ -58,7 +60,7 @@ namespace Axiom.src.core.Perft
             Console.WriteLine("Total ms elpased: " + total.ElapsedMilliseconds);
             Console.WriteLine("Total nodes: " + totalPositions);
             Console.WriteLine("Total positions: " + num);
-            Console.WriteLine("Knps: " + totalPositions / (ulong)total.ElapsedMilliseconds);
+            Console.WriteLine("Knps: " + (totalPositions / (ulong)total.ElapsedMilliseconds));
 
 
         }
