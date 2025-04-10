@@ -1,12 +1,12 @@
 ﻿namespace Axiom.src.core.Board
 {
-    static class Zobrist
+    internal static class Zobrist
     {
         public static ulong PseudoRandomNumber(ref ulong value)
         {
-            value ^= ((value + 92875224317UL) << 48) ^ ((16875224059UL * (value + 92875223911UL)) >> 32) + 92875224317UL;
-            value ^= ((value + 52875224453UL) >> 30) ^ ((92875223911UL * (value + 92875223911UL)) << 48) + 52875224453UL;
-            value ^= (value >> 30) * 52875224453UL * value + 92875223911UL;
+            value ^= ((value + 92875224317UL) << 48) ^ (((16875224059UL * (value + 92875223911UL)) >> 32) + 92875224317UL);
+            value ^= ((value + 52875224453UL) >> 30) ^ (((92875223911UL * (value + 92875223911UL)) << 48) + 52875224453UL);
+            value ^= ((value >> 30) * 52875224453UL * value) + 92875223911UL;
             return value * value;
         }
 

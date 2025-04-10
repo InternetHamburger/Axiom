@@ -23,7 +23,7 @@ namespace Axiom.src.core.Move_Generation
             {
                 DstFromCenter[squareIndex] = GetDstFromCenter(squareIndex);
                 int rank = BoardUtility.Rank(squareIndex);
-                int file = squareIndex - rank * 8;
+                int file = squareIndex - (rank * 8);
 
 
 
@@ -35,7 +35,7 @@ namespace Axiom.src.core.Move_Generation
                     if (knightJumpSquare >= 0 && knightJumpSquare < 64)
                     {
                         int knightSquareRank = BoardUtility.Rank(knightJumpSquare);
-                        int knightSquareFile = knightJumpSquare - knightSquareRank * 8;
+                        int knightSquareFile = knightJumpSquare - (knightSquareRank * 8);
                         // Ensure knight has moved max of 2 squares on x/y axis (to reject indices that have wrapped around side of board)
                         int maxCoordMoveDst = Math.Max(Math.Abs(file - knightSquareFile), Math.Abs(rank - knightSquareRank));
                         if (maxCoordMoveDst == 2)
@@ -49,19 +49,19 @@ namespace Axiom.src.core.Move_Generation
                 {
                     for (int piece = 1; piece <= Piece.MaxPieceIndex; piece++)
                     {
-                        for(int square = 0; square < 64; square++)
+                        for (int square = 0; square < 64; square++)
                         {
                             int pieceIndex = piece;
                             if (pieceIndex > Piece.WhiteKing) pieceIndex -= 2;
                             if (stm == 0)
                             {
-                                int index = 64 * (pieceIndex - 1) + square;
+                                int index = (64 * (pieceIndex - 1)) + square;
                                 NNInputIndicies[stm, piece, square] = index;
                             }
                             else
                             {
                                 pieceIndex += piece > Piece.WhiteKing ? -6 : 6;
-                                int index = 64 * (pieceIndex - 1) + BoardUtility.FlipSquare(square);
+                                int index = (64 * (pieceIndex - 1)) + BoardUtility.FlipSquare(square);
                                 NNInputIndicies[stm, piece, square] = index;
                             }
                         }
@@ -75,7 +75,7 @@ namespace Axiom.src.core.Move_Generation
         }
 
 
-        static ulong ComputeKingAttacks(int square)
+        private static ulong ComputeKingAttacks(int square)
         {
             ulong attacks = 0UL;
 
@@ -94,7 +94,7 @@ namespace Axiom.src.core.Move_Generation
                 // Check if the new position is on the board
                 if (newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8)
                 {
-                    int newSquare = newRank * 8 + newFile;
+                    int newSquare = (newRank * 8) + newFile;
                     attacks |= 1UL << newSquare;
                 }
             }
@@ -102,7 +102,7 @@ namespace Axiom.src.core.Move_Generation
             return attacks;
         }
 
-        static int GetDstFromCenter(int square)
+        private static int GetDstFromCenter(int square)
         {
             int file = BoardUtility.File(square);
             int rank = BoardUtility.Rank(square);

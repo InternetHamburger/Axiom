@@ -1,15 +1,10 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Nerual_Network.Chess
+namespace Axiom.src.core.Evaluation.NeuralNetwork
 {
-    static class FenUtlity
+    internal static class FenUtlity
     {
 
         public static double Sigmoid(double x)
@@ -35,7 +30,7 @@ namespace Nerual_Network.Chess
                 }
 
                 byte? piece = Piece.GetType(c);
-                
+
                 if (piece == null)
                 {
                     fenIndex++;

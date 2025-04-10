@@ -1,15 +1,9 @@
-﻿using Axiom.src.core.Board;
-using Axiom.src.core.Move_Generation;
+﻿using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using Nerual_Network.Chess;
-using Newtonsoft.Json;
-using System;
-using System.IO;
 using System.Numerics;
 using System.Reflection;
-using System.Text.Json;
 
-namespace Nerual_Network.Setup
+namespace Axiom.src.core.Evaluation.NeuralNetwork.Setup
 {
     public class NeuralNetwork
     {
@@ -44,7 +38,7 @@ namespace Nerual_Network.Setup
 
             OutputWeightVectorThem = new short[hlSize];
             OutputWeightVectorUs = new short[hlSize];
-            
+
             this.inputSize = inputSize;
             this.hlSize = hlSize;
         }
@@ -99,7 +93,7 @@ namespace Nerual_Network.Setup
             int output = MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorUs, accUs)
                        + MatrixHelper.OutputMatrixVectorMultiplication(OutputWeightVectorThem, accThem);
 
-            output = output / QA + OutputBias;
+            output = (output / QA) + OutputBias;
 
             return output * EvalScale / (QA * QB);
 
@@ -131,15 +125,15 @@ namespace Nerual_Network.Setup
 
                 // Load accumulator ints
                 var acc0Lo = new Vector<int>(StmAccumulator, i);
-                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + (simdWidth / 2));
                 var acc1Lo = new Vector<int>(NstmAccumulator, i);
-                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + (simdWidth / 2));
 
                 // Add
                 (acc0Lo + w0Lo).CopyTo(StmAccumulator, i);
-                (acc0Hi + w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc0Hi + w0Hi).CopyTo(StmAccumulator, i + (simdWidth / 2));
                 (acc1Lo + w1Lo).CopyTo(NstmAccumulator, i);
-                (acc1Hi + w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
+                (acc1Hi + w1Hi).CopyTo(NstmAccumulator, i + (simdWidth / 2));
             }
         }
 
@@ -164,14 +158,14 @@ namespace Nerual_Network.Setup
                 Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
 
                 var acc0Lo = new Vector<int>(StmAccumulator, i);
-                var acc0Hi = new Vector<int>(StmAccumulator, i + simdWidth / 2);
+                var acc0Hi = new Vector<int>(StmAccumulator, i + (simdWidth / 2));
                 var acc1Lo = new Vector<int>(NstmAccumulator, i);
-                var acc1Hi = new Vector<int>(NstmAccumulator, i + simdWidth / 2);
+                var acc1Hi = new Vector<int>(NstmAccumulator, i + (simdWidth / 2));
 
                 (acc0Lo - w0Lo).CopyTo(StmAccumulator, i);
-                (acc0Hi - w0Hi).CopyTo(StmAccumulator, i + simdWidth / 2);
+                (acc0Hi - w0Hi).CopyTo(StmAccumulator, i + (simdWidth / 2));
                 (acc1Lo - w1Lo).CopyTo(NstmAccumulator, i);
-                (acc1Hi - w1Hi).CopyTo(NstmAccumulator, i + simdWidth / 2);
+                (acc1Hi - w1Hi).CopyTo(NstmAccumulator, i + (simdWidth / 2));
             }
         }
 
@@ -197,24 +191,24 @@ namespace Nerual_Network.Setup
                 {
                     for (int j = 0; j < hlSize; j++)
                     {
-                        HlWeightMatrix[i][j] = (short)weights[hlSize * i + j];
+                        HlWeightMatrix[i][j] = weights[(hlSize * i) + j];
                     }
                 }
                 for (int i = 0; i < hlSize; i++)
                 {
-                    HlBiasVector[i] = (short)weights[inputSize * hlSize + i];
+                    HlBiasVector[i] = weights[(inputSize * hlSize) + i];
                     StmAccumulator[i] = HlBiasVector[i];
                     NstmAccumulator[i] = HlBiasVector[i];
                 }
                 for (int i = 0; i < hlSize; i++)
                 {
-                    OutputWeightVectorUs[i] = (short)weights[(inputSize + 1) * hlSize + i];
+                    OutputWeightVectorUs[i] = weights[((inputSize + 1) * hlSize) + i];
                 }
                 for (int i = 0; i < hlSize; i++)
                 {
-                    OutputWeightVectorThem[i] = (short)weights[(inputSize + 2) * hlSize + i];
+                    OutputWeightVectorThem[i] = weights[((inputSize + 2) * hlSize) + i];
                 }
-                OutputBias = (short)weights[(inputSize + 3) * hlSize];
+                OutputBias = weights[(inputSize + 3) * hlSize];
             }
         }
     }

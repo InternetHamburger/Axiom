@@ -1,8 +1,6 @@
 ﻿using Axiom.src.core.Board;
 using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
-using Nerual_Network.Chess;
-using Nerual_Network.Setup;
 
 namespace Axiom.src.core.Evaluation
 {
@@ -207,7 +205,7 @@ namespace Axiom.src.core.Evaluation
             MGeval *= board.WhiteToMove ? 1 : -1;
             EGeval *= board.WhiteToMove ? 1 : -1;
             EGeval += 4 * PreComputedMoveData.DstFromCenter[board.KingSquares[board.WhiteToMove ? 1 : 0]];
-            int eval = (MGeval * (256 - GamePhase) + EGeval * GamePhase) / 256;
+            int eval = ((MGeval * (256 - GamePhase)) + (EGeval * GamePhase)) / 256;
 
             return eval;
         }
