@@ -292,7 +292,14 @@ namespace Axiom.src.core.Search
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
                 {
-                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    if (ttEntry.BestMove == move.Value && ttScore != int.MinValue)
+                    {
+                        score = ttScore;
+                    }
+                    else
+                    {
+                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    }
                 }
                 else
                 {
