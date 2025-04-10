@@ -21,7 +21,17 @@ namespace Axiom.src.core.Evaluation
 
         public void OrderMoves(Move[] moves, Board.Board board, Move ttMove, int plyFromRoot)
         {
-            Array.Sort(moves, (a, b) => MoveScore(b, board, ttMove, KillerMoves[plyFromRoot]).CompareTo(MoveScore(a, board, ttMove, KillerMoves[plyFromRoot])));
+            (int, Move)[] MoveScores = new (int, Move)[moves.Length];
+            for (int i = 0; i < MoveScores.Length; i++)
+            {
+                MoveScores[i] = (MoveScore(moves[i], board, ttMove, KillerMoves[plyFromRoot]), moves[i]);
+            }
+            Array.Sort(MoveScores, (a, b) => b.Item1.CompareTo(a.Item1));
+
+            for (int i = 0; i < MoveScores.Length; i++)
+            {
+                moves[i] = MoveScores[i].Item2;
+            }
         }
 
         public void OrderCaptures(Move[] moves, Board.Board board)
