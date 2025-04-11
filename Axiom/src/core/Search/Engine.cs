@@ -190,17 +190,17 @@ namespace Axiom.src.core.Search
             int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
-            {
+            {   
                 return staticEval; // fail soft
             }
             // Null Move Pruning
             const int NULL_MOVE_MIN_DEPTH = 3;
             const int R = 2; // Reduction factor for null move pruning
 
-            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase) && staticEval >= beta)
+            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase))
             {
                 board.MakeNullMove();
-                int nullMoveScore = -NegaMax(depth - 1 - Math.Max(R,depth / 2 + 1), plyFromRoot + 1, -beta, -beta + 1);
+                int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
                 board.UndoNullMove();
 
                 if (nullMoveScore >= beta)
