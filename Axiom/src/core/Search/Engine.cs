@@ -329,7 +329,6 @@ namespace Axiom.src.core.Search
                     }
                     if (score > alpha)
                     {
-                        moveOrderer.UpdateHistoryTableAlphaRaise(board, move, depth);
                         alphaWasRaised = true;
                         alpha = score;
                     }
