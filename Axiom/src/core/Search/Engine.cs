@@ -190,7 +190,7 @@ namespace Axiom.src.core.Search
             int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
             if (plyFromRoot > 0 && !InCheck && ttEntry.BestMove == 0 && staticEval >= beta + margin)
-            {
+            {   
                 return staticEval; // fail soft
             }
             // Null Move Pruning
@@ -209,9 +209,28 @@ namespace Axiom.src.core.Search
                 }
             }
 
+
+            // Do TT move search here (or not)
+            int ttScore = int.MinValue;
+            if (ttEntry.BestMove != 0 && ttEntry.ZobristHash == board.ZobristHash && plyFromRoot > 0)
+            {
+                Move move = new(ttEntry.BestMove);
+                board.MakeMove(move);
+                int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
+                ttScore = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                board.UndoMove(move);
+
+                if (ttScore >= beta)
+                {
+                    return ttScore;
+                }
+            }
+
+            
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
 
+            
 
             int numLegalMoves = 0;
             int bestScore = NegativeInf;
@@ -273,7 +292,14 @@ namespace Axiom.src.core.Search
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
                 {
-                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    if (ttEntry.BestMove == move.Value && ttScore != int.MinValue)
+                    {
+                        score = ttScore;
+                    }
+                    else
+                    {
+                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    }
                 }
                 else
                 {
@@ -303,7 +329,6 @@ namespace Axiom.src.core.Search
                     }
                     if (score > alpha)
                     {
-                        moveOrderer.UpdateHistoryTableAlphaRaise(board, move, depth);
                         alphaWasRaised = true;
                         alpha = score;
                     }
