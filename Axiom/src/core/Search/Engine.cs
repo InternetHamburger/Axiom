@@ -338,7 +338,18 @@ namespace Axiom.src.core.Search
                 {
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
-                        moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
+                        int bonus = depth * depth * 3;
+                        moveOrderer.UpdateHistoryTable(board, move, bonus);
+
+                        for (int j = 0; j < i - 1; j++)
+                        {
+                            Move m = pseudoLegalMoves[j];
+                            if (board.Squares[m.TargetSquare] == 0)
+                            {
+                                moveOrderer.UpdateHistoryTable(board, m, -bonus);
+                            }
+                        }
+
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
                     TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);

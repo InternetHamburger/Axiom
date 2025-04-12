@@ -4,6 +4,8 @@ namespace Axiom.src.core.Evaluation
 {
     public class MoveOrderer
     {
+        const int MaxHistoryScore = 10000;
+
         public int[,] HistoryTable;
         public Move[] KillerMoves;
 
@@ -78,7 +80,7 @@ namespace Axiom.src.core.Evaluation
             {
                 int index2 = board.Squares[move.StartSquare];
                 int index3 = move.TargetSquare;
-                return HistoryTable[index2, index3] - 10000;
+                return HistoryTable[index2, index3] - MaxHistoryScore;
             }
         }
 
@@ -90,18 +92,11 @@ namespace Axiom.src.core.Evaluation
             return moveScore;
         }
 
-        public void UpdateHistoryTableBetaCutoff(Board.Board board, Move move, int depth)
+        public void UpdateHistoryTable(Board.Board board, Move move, int bonus)
         {
             int index2 = board.Squares[move.StartSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index2, index3] = Math.Clamp(HistoryTable[index2, index3] + (3 * depth * depth), 0, 10000);
-        }
-
-        public void UpdateHistoryTableAlphaRaise(Board.Board board, Move move, int depth)
-        {
-            int index2 = board.Squares[move.StartSquare];
-            int index3 = move.TargetSquare;
-            HistoryTable[index2, index3] = Math.Clamp(HistoryTable[index2, index3] + (2 * depth), 0, 10000);
+            HistoryTable[index2, index3] = Math.Clamp(HistoryTable[index2, index3] + bonus, -MaxHistoryScore, MaxHistoryScore);
         }
     }
 }
