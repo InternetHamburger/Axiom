@@ -209,23 +209,6 @@ namespace Axiom.src.core.Search
                 }
             }
 
-
-            // Do TT move search here (or not)
-            int ttScore = int.MinValue;
-            if (ttEntry.BestMove != 0 && ttEntry.ZobristHash == board.ZobristHash && plyFromRoot > 0)
-            {
-                Move move = new(ttEntry.BestMove);
-                board.MakeMove(move);
-                int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
-                ttScore = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
-                board.UndoMove(move);
-
-                if (ttScore >= beta)
-                {
-                    return ttScore;
-                }
-            }
-
             
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
@@ -294,14 +277,7 @@ namespace Axiom.src.core.Search
 
                 if (i == 0)
                 {
-                    if (ttEntry.BestMove == move.Value && ttScore != int.MinValue)
-                    {
-                        score = ttScore;
-                    }
-                    else
-                    {
-                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
-                    }
+                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
                 }
                 else
                 {
@@ -346,7 +322,7 @@ namespace Axiom.src.core.Search
                         {
                             Move m = quietMoves[j];
                             if (m.Value == bestMove.Value) continue;
-                            moveOrderer.UpdateHistoryTable(board, m, -bonus / 3);
+                            moveOrderer.UpdateHistoryTable(board, m, -depth);
                         }
 
                         moveOrderer.KillerMoves[plyFromRoot] = move;
