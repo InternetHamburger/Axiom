@@ -230,12 +230,12 @@ namespace Axiom.src.core.Search
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
 
-            
-
             int numLegalMoves = 0;
             int bestScore = NegativeInf;
             bool alphaWasRaised = false;
             Move bestMove = Move.NullMove;
+            List<Move> quietMoves = new(10);
+
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
@@ -264,7 +264,6 @@ namespace Axiom.src.core.Search
                             break;
                     }
                 }
-
                 bool isCapture = board.Squares[move.TargetSquare] != 0;
                 board.MakeMove(move);
 
@@ -276,10 +275,12 @@ namespace Axiom.src.core.Search
                 }
 
 
+                if (!isCapture)
+                {
+                    quietMoves.Add(move);
+                }
 
                 numLegalMoves++;
-
-
                 int futilitymargin = 200 * depth; // Dynamic futility margin
 
                 // Futility pruning: skip moves unlikely to raise alpha
@@ -290,6 +291,7 @@ namespace Axiom.src.core.Search
                 }
                 int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
+
                 if (i == 0)
                 {
                     if (ttEntry.BestMove == move.Value && ttScore != int.MinValue)
@@ -317,7 +319,6 @@ namespace Axiom.src.core.Search
                 {
                     return 0;
                 }
-
                 if (score > bestScore)
                 {
                     bestScore = score;
@@ -341,13 +342,11 @@ namespace Axiom.src.core.Search
                         int bonus = depth * depth * 3;
                         moveOrderer.UpdateHistoryTable(board, move, bonus);
 
-                        for (int j = 0; j < i - 1; j++)
+                        for (int j = 0; j < quietMoves.Count; j++)
                         {
-                            Move m = pseudoLegalMoves[j];
-                            if (board.Squares[m.TargetSquare] == 0)
-                            {
-                                moveOrderer.UpdateHistoryTable(board, m, -bonus);
-                            }
+                            Move m = quietMoves[j];
+                            if (m.Value == bestMove.Value) continue;
+                            moveOrderer.UpdateHistoryTable(board, m, -bonus / 3);
                         }
 
                         moveOrderer.KillerMoves[plyFromRoot] = move;

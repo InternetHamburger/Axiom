@@ -1,10 +1,11 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Evaluation
 {
     public class MoveOrderer
     {
-        const int MaxHistoryScore = 10000;
+        public const int MaxHistoryScore = 10000;
 
         public int[,] HistoryTable;
         public Move[] KillerMoves;
@@ -59,7 +60,7 @@ namespace Axiom.src.core.Evaluation
             };
         }
 
-        private int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
+        public int MoveScore(Move move, Board.Board board, Move ttMove, Move killerMove)
         {
             if (Move.SameMove(ttMove, move))
             {
@@ -73,7 +74,6 @@ namespace Axiom.src.core.Evaluation
             {
                 int captureMaterialDelta = CaptureScoreDelta(move, board);
                 int moveScore = captureMaterialDelta;
-
                 return moveScore;
             }
             else
