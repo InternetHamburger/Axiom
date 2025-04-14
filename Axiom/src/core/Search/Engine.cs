@@ -317,7 +317,7 @@ namespace Axiom.src.core.Search
                 {
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
-                        int bonus = 3 * depth * depth;
+                        int bonus = depth * depth;
                         moveOrderer.UpdateHistoryTable(board, move, bonus);
 
                         for (int j = 0; j < quietMoves.Count; j++)
