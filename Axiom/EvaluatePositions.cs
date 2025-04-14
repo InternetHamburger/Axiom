@@ -1,14 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using Axiom.src.core.Search;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using Axiom.src.core.Search;
 
 namespace Axiom
 {
-    static class EvaluatePositions
+    internal static class EvaluatePositions
     {
         public static void Evaluate()
         {
@@ -24,8 +20,10 @@ namespace Axiom
             Engine[] engines = new Engine[maxThreads];
             for (int i = 0; i < maxThreads; i++)
             {
-                engines[i] = new Engine();
-                engines[i].printInfo = false;
+                engines[i] = new Engine
+                {
+                    printInfo = false
+                };
             }
 
             int evaluatedCount = 0;
@@ -41,7 +39,7 @@ namespace Axiom
                 workers[threadId] = Task.Run(() =>
                 {
                     Engine engine = engines[localThreadId];
-                    List<string> localResults = new List<string>();
+                    List<string> localResults = [];
 
                     while (positionQueue.TryDequeue(out string position))
                     {
@@ -57,7 +55,7 @@ namespace Axiom
                         {
                             double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
                             double pps = elapsedSeconds > 0 ? currentCount / elapsedSeconds : 0;
-                            double progress = (currentCount / (double)totalPositions) * 100;
+                            double progress = currentCount / (double)totalPositions * 100;
 
                             Console.WriteLine($"Progress: {progress:F2}% | Evaluated: {currentCount}/{totalPositions} | PPS: {pps:F2}");
                         }
@@ -101,7 +99,7 @@ namespace Axiom
             stopwatch.Stop();
 
             Console.WriteLine($"Evaluation completed in {stopwatch.Elapsed.TotalSeconds:F2} seconds.");
-            Console.WriteLine($"Final PPS: {(evaluatedCount / stopwatch.Elapsed.TotalSeconds):F2}");
+            Console.WriteLine($"Final PPS: {evaluatedCount / stopwatch.Elapsed.TotalSeconds:F2}");
         }
     }
 }

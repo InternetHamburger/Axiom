@@ -1,9 +1,8 @@
-﻿using Nerual_Network.Setup;
-using System.Numerics;
+﻿using System.Numerics;
 
-namespace Nerual_Network
+namespace Axiom.src.core.Evaluation.NeuralNetwork
 {
-    static class MatrixHelper
+    internal static class MatrixHelper
     {
         public static double[] InputMatrixVectorMultiplication(double[][] matrix, double[] vector)
         {
@@ -64,7 +63,7 @@ namespace Nerual_Network
                 Vector.Widen(mVec, out var mLo, out var mHi);
 
                 var vLo = new Vector<int>(vector, i);
-                var vHi = new Vector<int>(vector, i + simdWidth / 2);
+                var vHi = new Vector<int>(vector, i + (simdWidth / 2));
 
                 sum += Vector.Dot(mLo, vLo);
                 sum += Vector.Dot(mHi, vHi);
@@ -82,7 +81,7 @@ namespace Nerual_Network
         public static double[] VectorScaling(double[] vector, double scalar)
         {
             int length = vector.Length;
-            double[] scaledVector = new double[length]; 
+            double[] scaledVector = new double[length];
             // When passing in a jagged array (my matrices) it takes a reference instead of a copy
 
             for (int i = 0; i < length; i++)

@@ -71,7 +71,7 @@ namespace Axiom.src.core.Utility
 
                 Squares = new(squarePieces);
 
-                whiteToMove = (sections[1] == "w");
+                whiteToMove = sections[1] == "w";
 
                 string castlingRights = sections[2];
                 whiteCastleKingside = castlingRights.Contains('K');
@@ -104,12 +104,12 @@ namespace Axiom.src.core.Utility
                 // Half-move clock
                 if (sections.Length > 4)
                 {
-                    int.TryParse(sections[4], out fiftyMovePlyCount);
+                    _ = int.TryParse(sections[4], out fiftyMovePlyCount);
                 }
                 // Full move number
                 if (sections.Length > 5)
                 {
-                    int.TryParse(sections[5], out moveCount);
+                    _ = int.TryParse(sections[5], out moveCount);
                 }
             }
         }
@@ -125,41 +125,30 @@ namespace Axiom.src.core.Utility
             // Castling
             bool whiteKingside = (board.CurrentGameState.castlingRights & 1) == 1;
             bool whiteQueenside = ((board.CurrentGameState.castlingRights >> 1) & 1) == 1;
-            bool blackKingside = (board.CurrentGameState.castlingRights >> 2 & 1) == 1;
-            bool blackQueenside = (board.CurrentGameState.castlingRights >> 3 & 1) == 1;
+            bool blackKingside = ((board.CurrentGameState.castlingRights >> 2) & 1) == 1;
+            bool blackQueenside = ((board.CurrentGameState.castlingRights >> 3) & 1) == 1;
 
-            CastlingRights += (whiteKingside) ? "K" : "";
-            CastlingRights += (whiteQueenside) ? "Q" : "";
-            CastlingRights += (blackKingside) ? "k" : "";
-            CastlingRights += (blackQueenside) ? "q" : "";
-            CastlingRights += ((board.CurrentGameState.castlingRights) == 0) ? "-" : "";
+            CastlingRights += whiteKingside ? "K" : "";
+            CastlingRights += whiteQueenside ? "Q" : "";
+            CastlingRights += blackKingside ? "k" : "";
+            CastlingRights += blackQueenside ? "q" : "";
+            CastlingRights += (board.CurrentGameState.castlingRights == 0) ? "-" : "";
 
 
             SideToMove = board.WhiteToMove ? "w" : "b";
 
-            if (board.CurrentGameState.enPassantFile != -1)
-            {
-                if (board.WhiteToMove)
-                {
-                    EnPassantSquare = BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + 8 * 2);
-                }
-                else
-                {
-                    EnPassantSquare = BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + 8 * 5);
-                }
-            }
-            else
-            {
-                EnPassantSquare = "-";
-            }
+            EnPassantSquare = board.CurrentGameState.enPassantFile != -1
+                ? board.WhiteToMove
+                    ? BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + (8 * 2))
+                    : BoardUtility.NameOfSquare(board.CurrentGameState.enPassantFile + (8 * 5))
+                : "-";
 
 
             int absIndex = 0;
-            int addIndex = 0;
             bool hasSeenPiece = false;
             for (int rank = 0; rank < 8; rank++)
             {
-                addIndex = 0;
+                int addIndex = 0;
                 for (int file = 0; file < 8; file++)
                 {
                     if (board.Squares[absIndex] != 0)
