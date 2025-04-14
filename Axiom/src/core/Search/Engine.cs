@@ -218,6 +218,7 @@ namespace Axiom.src.core.Search
             int bestScore = NegativeInf;
             bool alphaWasRaised = false;
             Move bestMove = Move.NullMove;
+            List<Move> quietMoves = new(10);
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
@@ -256,7 +257,10 @@ namespace Axiom.src.core.Search
                     board.UndoMove(move);
                     continue;
                 }
-
+                if (!isCapture)
+                {
+                    quietMoves.Add(move);
+                }
 
 
                 numLegalMoves++;
@@ -304,7 +308,6 @@ namespace Axiom.src.core.Search
                     }
                     if (score > alpha)
                     {
-                        moveOrderer.UpdateHistoryTableAlphaRaise(board, move, depth);
                         alphaWasRaised = true;
                         alpha = score;
                     }
@@ -314,7 +317,15 @@ namespace Axiom.src.core.Search
                 {
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
-                        moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
+                        int bonus = 3 * depth * depth;
+                        moveOrderer.UpdateHistoryTable(board, move, bonus);
+
+                        for (int j = 0; j < quietMoves.Count; j++)
+                        {
+                            if (quietMoves[j].Value == bestMove.Value) continue;
+                            moveOrderer.UpdateHistoryTable(board, quietMoves[j], -bonus);
+                        }
+
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
                     TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);

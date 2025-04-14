@@ -81,12 +81,12 @@ namespace Axiom.src.core.Evaluation
             return moveScore;
         }
 
-        public void UpdateHistoryTableBetaCutoff(Board.Board board, Move move, int depth)
+        public void UpdateHistoryTable(Board.Board board, Move move, int bonus)
         {
             int index1 = board.WhiteToMove ? 0 : 1;
             int index2 = board.Squares[move.TargetSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + 3 * depth * depth, 0, 10000);
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + bonus, 0, 10000);
         }
 
         public void UpdateHistoryTableAlphaRaise(Board.Board board, Move move, int depth)
