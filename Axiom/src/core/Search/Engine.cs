@@ -149,6 +149,7 @@ namespace Axiom.src.core.Search
 
         private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
+            bool IsPvNode = (beta - alpha) > 1;
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
 
@@ -198,7 +199,7 @@ namespace Axiom.src.core.Search
             const int NULL_MOVE_MIN_DEPTH = 3;
             const int R = 2; // Reduction factor for null move pruning
 
-            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase))
+            if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase) && !IsPvNode)
             {
                 board.MakeNullMove();
                 int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
