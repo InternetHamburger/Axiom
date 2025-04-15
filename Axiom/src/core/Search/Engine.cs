@@ -149,6 +149,7 @@ namespace Axiom.src.core.Search
 
         private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
         {
+            bool IsPvNode = (beta - alpha) > 1;
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
 
