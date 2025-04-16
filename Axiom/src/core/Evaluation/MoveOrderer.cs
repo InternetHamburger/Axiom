@@ -15,8 +15,22 @@ namespace Axiom.src.core.Evaluation
 
         public void Init()
         {
-            HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
-            KillerMoves = new Move[256];
+            for (int i = 0; i < 2; i++)
+            {
+                for(int j = 0; j < Piece.MaxPieceIndex + 1; j++)
+                {
+                    for (int k = 0; k < 64; k++)
+                    {
+                        HistoryTable[i, j, k] = 0;
+                    }
+                }
+            }
+            for (int i = 0; i < 256; i++)
+            {
+                KillerMoves[i] = new Move(0);
+            }
+            //HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
+            //KillerMoves = new Move[256];
         }
 
         public void OrderMoves(Move[] moves, Board.Board board, Move ttMove, int plyFromRoot)

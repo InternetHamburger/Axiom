@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Axiom.src;
 using Axiom.src.core.Utility;
+using System.Diagnostics;
 
 namespace Axiom
 {
@@ -17,7 +18,9 @@ namespace Axiom
         public int numConcurrentGames;
 
         public const int SOFT_NODE_LIMIT = 5000;
-        public const int HARD_NODE_LIMIT = 5000;
+        public const int HARD_NODE_LIMIT = 10000;
+
+        private static readonly object fileLock = new object();
 
         public Datagen(int threads)
         {
@@ -29,20 +32,56 @@ namespace Axiom
             numConcurrentGames = threads;
         }
 
-        public void Run(string outputPath)
+        public async Task Run(string outputPath)
         {
-            using StreamWriter writer = new StreamWriter(outputPath);
+            Console.WriteLine("Running datagen with " + numConcurrentGames + " threads and output to " + outputPath);
 
-            for(int i = 0; i < numConcurrentGames; i++)
+            // open once…
+            using StreamWriter writer = new(outputPath, append: true);
+
+            int numGamesPlayed = 0;
+            int numPositionsGenerated = 0;
+            //var watch = new Stopwatch();
+            //watch.Start();
+
+            // start N infinite‑loop tasks
+            Task[] gameTasks = new Task[numConcurrentGames];
+            for (int i = 0; i < numConcurrentGames; i++)
             {
-                string[] game = players[i].PlayGame(GetRandomStartpos());
-
-                foreach(string fen in game)
+                int index = i; // capture
+                gameTasks[i] = Task.Run(() =>
                 {
-                    writer.WriteLine(fen);
-                }
-                
+                    while (true)
+                    {
+                        string[] game = players[index].PlayGame(GetRandomStartpos());
+
+                        lock (fileLock)
+                        {
+                            numGamesPlayed++;
+                            numPositionsGenerated += game.Length;
+
+                            foreach (string fen in game)
+                                writer.WriteLine(fen);
+
+                            // only flush occasionally if you want
+                            if ((numGamesPlayed % 10) == 0)
+                            {
+                                writer.Flush();
+                                Console.WriteLine("------------------");
+                                Console.WriteLine($"Total games      |  {numGamesPlayed}");
+                                Console.WriteLine($"Total positions  |  {numPositionsGenerated}");
+                                //Console.WriteLine($"Time elapsed     |  {watch.Elapsed.TotalSeconds:F1}s");
+                                //Console.WriteLine($"Positions/sec    |  {Math.Round(numPositionsGenerated / watch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine("------------------\n");
+                            }
+                        }
+                    }
+                });
             }
+
+            // **THIS AWAIT KEEPS THE STREAMWRITER OPEN FOREVER**  
+            // (since your tasks are infinite‑loops, this await never completes, which is what you want)
+            await Task.WhenAll(gameTasks);
         }
 
         public static string GetRandomStartpos()
@@ -119,11 +158,6 @@ namespace Axiom
             engine.SetPosition(startFen);
             while (true)
             {
-                engine.Search(255, int.MaxValue, hardNodes, softNodes);
-                fens[gameLength++] = engine.board.Fen + " | " + UCI.GetCorrectEval(engine.eval * (engine.board.WhiteToMove ? 1 : -1)) + " | " + BoardUtility.MoveToUci(engine.bestMoveThisIteration) + " | ";
-
-                engine.board.MakeMove(engine.bestMoveThisIteration);
-
                 if (IsGameOver(engine.board))
                 {
                     gameResult = engine.board.IsInCheck(engine.board.WhiteToMove) ? engine.board.WhiteToMove ? "0" : "1" : "0.5";
@@ -134,6 +168,13 @@ namespace Axiom
                     gameResult = "0.5";
                     break;
                 }
+
+                engine.Search(255, int.MaxValue, hardNodes, softNodes);
+                fens[gameLength++] = engine.board.Fen + " | " + UCI.GetCorrectEval(engine.eval * (engine.board.WhiteToMove ? 1 : -1)) + " | " + BoardUtility.MoveToUci(engine.bestMoveThisIteration) + " | ";
+
+                engine.board.MakeMove(engine.bestMoveThisIteration);
+
+                
             }
 
             // Slice off
