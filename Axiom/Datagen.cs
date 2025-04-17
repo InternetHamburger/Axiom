@@ -63,7 +63,7 @@ namespace Axiom
                         numGamesPlayed++;
                         numPositionsGenerated += localGame.Length;
                         localPositions += localGame.Length;
-                        if (games.Count % 1 == 0)
+                        if (games.Count % 5 == 0)
                         {
                             lock (fileLock)
                             {
