@@ -41,8 +41,8 @@ namespace Axiom
 
             int numGamesPlayed = 0;
             int numPositionsGenerated = 0;
-            //var watch = new Stopwatch();
-            //watch.Start();
+            var watch = new Stopwatch();
+            watch.Start();
 
             // start N infinite‑loop tasks
             Task[] gameTasks = new Task[numConcurrentGames];
@@ -70,8 +70,8 @@ namespace Axiom
                                 Console.WriteLine("------------------");
                                 Console.WriteLine($"Total games      |  {numGamesPlayed}");
                                 Console.WriteLine($"Total positions  |  {numPositionsGenerated}");
-                                //Console.WriteLine($"Time elapsed     |  {watch.Elapsed.TotalSeconds:F1}s");
-                                //Console.WriteLine($"Positions/sec    |  {Math.Round(numPositionsGenerated / watch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Time elapsed     |  {watch.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"Positions/sec    |  {Math.Round(numPositionsGenerated / watch.Elapsed.TotalSeconds)}");
                                 Console.WriteLine("------------------\n");
                             }
                         }

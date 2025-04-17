@@ -35,7 +35,7 @@ namespace Axiom
                     else
                     {
                         Datagen datagen = new(int.Parse(tokens[2]));
-                        datagen.Run(tokens[4]);
+                        _ = datagen.Run(tokens[4]);
                     }
                 }
                 else
