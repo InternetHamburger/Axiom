@@ -36,9 +36,9 @@ namespace Axiom
         {
             Console.WriteLine("Running datagen with " + numConcurrentGames + " threads and output to " + outputPath);
 
-            // open once…
-            using StreamWriter writer = new(outputPath, append: true);
+            StreamWriter writer = new(outputPath, append: true);
 
+            int numOutputSwitches = 1;
             int numGamesPlayed = 0;
             int numPositionsGenerated = 0;
             int localPositions = 0;
@@ -63,7 +63,7 @@ namespace Axiom
                         numGamesPlayed++;
                         numPositionsGenerated += localGame.Length;
                         localPositions += localGame.Length;
-                        if (games.Count % 5 == 0)
+                        if (games.Count % 1 == 0)
                         {
                             lock (fileLock)
                             {
@@ -89,7 +89,19 @@ namespace Axiom
                                     localwatch.Restart();
                                     localwatch.Start();
                                 }
-                                games = new List<string[]>();
+                                games = [];
+                                if (numPositionsGenerated >= 500000)
+                                {
+                                    outputPath = outputPath.Substring(0, outputPath.Length - 4 - numOutputSwitches.ToString().Length) + numOutputSwitches++ + ".txt";
+                                    
+                                    Console.WriteLine("------------------------------------");
+                                    Console.WriteLine("More than 500k positions generated");
+                                    Console.WriteLine("Switching output path to " + outputPath + "...");
+                                    Console.WriteLine("------------------------------------");
+                                    writer = new(outputPath, append: true);
+                                    numGamesPlayed = 0;
+                                    numPositionsGenerated = 0;
+                                }
                             }
                         }
                     }
