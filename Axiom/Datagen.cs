@@ -41,8 +41,12 @@ namespace Axiom
 
             int numGamesPlayed = 0;
             int numPositionsGenerated = 0;
-            var watch = new Stopwatch();
-            watch.Start();
+            int localPositions = 0;
+            var totalwatch = new Stopwatch();
+            totalwatch.Start();
+
+            var localwatch = new Stopwatch();
+            localwatch.Start();
 
             // start N infinite‑loop tasks
             Task[] gameTasks = new Task[numConcurrentGames];
@@ -59,7 +63,7 @@ namespace Axiom
                         {
                             numGamesPlayed++;
                             numPositionsGenerated += game.Length;
-
+                            localPositions += game.Length;
                             foreach (string fen in game)
                                 writer.WriteLine(fen);
 
@@ -68,11 +72,17 @@ namespace Axiom
                             {
                                 writer.Flush();
                                 Console.WriteLine("------------------");
-                                Console.WriteLine($"Total games      |  {numGamesPlayed}");
-                                Console.WriteLine($"Total positions  |  {numPositionsGenerated}");
-                                Console.WriteLine($"Time elapsed     |  {watch.Elapsed.TotalSeconds:F1}s");
-                                Console.WriteLine($"Positions/sec    |  {Math.Round(numPositionsGenerated / watch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Total games          |  {numGamesPlayed}");
+                                Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
+                                Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
                                 Console.WriteLine("------------------\n");
+                                localPositions = 0;
+                                localwatch.Stop();
+                                localwatch.Restart();
+                                localwatch.Start();
                             }
                         }
                     }
