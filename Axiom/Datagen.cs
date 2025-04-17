@@ -55,34 +55,41 @@ namespace Axiom
                 int index = i; // capture
                 gameTasks[i] = Task.Run(() =>
                 {
+                    List<string[]> games = [];
                     while (true)
                     {
-                        string[] game = players[index].PlayGame(GetRandomStartpos());
-
-                        lock (fileLock)
+                        string[] localGame = players[index].PlayGame(GetRandomStartpos());
+                        games.Add(localGame);
+                        numGamesPlayed++;
+                        numPositionsGenerated += localGame.Length;
+                        localPositions += localGame.Length;
+                        if (games.Count % 5 == 0)
                         {
-                            numGamesPlayed++;
-                            numPositionsGenerated += game.Length;
-                            localPositions += game.Length;
-                            foreach (string fen in game)
-                                writer.WriteLine(fen);
-
-                            // only flush occasionally if you want
-                            if ((numGamesPlayed % 10) == 0)
+                            lock (fileLock)
                             {
-                                writer.Flush();
-                                Console.WriteLine("------------------");
-                                Console.WriteLine($"Total games          |  {numGamesPlayed}");
-                                Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
-                                Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
-                                Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
-                                Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
-                                Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
-                                Console.WriteLine("------------------\n");
-                                localPositions = 0;
-                                localwatch.Stop();
-                                localwatch.Restart();
-                                localwatch.Start();
+                                foreach (string[] game in games)
+                                {
+                                    foreach (string fen in game)
+                                        writer.WriteLine(fen);
+                                }
+                                // only flush occasionally if you want
+                                if ((numGamesPlayed % 10) == 0)
+                                {
+                                    writer.Flush();
+                                    Console.WriteLine("------------------");
+                                    Console.WriteLine($"Total games          |  {numGamesPlayed}");
+                                    Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
+                                    Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
+                                    Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
+                                    Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
+                                    Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
+                                    Console.WriteLine("------------------\n");
+                                    localPositions = 0;
+                                    localwatch.Stop();
+                                    localwatch.Restart();
+                                    localwatch.Start();
+                                }
+                                games = new List<string[]>();
                             }
                         }
                     }
