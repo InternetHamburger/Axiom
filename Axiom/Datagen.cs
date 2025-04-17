@@ -101,6 +101,9 @@ namespace Axiom
                                     writer = new(outputPath, append: true);
                                     numGamesPlayed = 0;
                                     numPositionsGenerated = 0;
+                                    totalwatch.Stop();
+                                    totalwatch.Restart();
+                                    totalwatch.Start();
                                 }
                             }
                         }
