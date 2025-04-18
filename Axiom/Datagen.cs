@@ -36,9 +36,8 @@ namespace Axiom
         {
             Console.WriteLine("Running datagen with " + numConcurrentGames + " threads and output to " + outputPath);
 
-            StreamWriter writer = new(outputPath, append: true);
+            using StreamWriter writer = new(outputPath, append: true);
 
-            int numOutputSwitches = 1;
             int numGamesPlayed = 0;
             int numPositionsGenerated = 0;
             int localPositions = 0;
@@ -55,64 +54,43 @@ namespace Axiom
                 int index = i; // capture
                 gameTasks[i] = Task.Run(() =>
                 {
-                    List<string[]> games = [];
                     while (true)
                     {
-                        string[] localGame = players[index].PlayGame(GetRandomStartpos());
-                        games.Add(localGame);
-                        numGamesPlayed++;
-                        numPositionsGenerated += localGame.Length;
-                        localPositions += localGame.Length;
-                        if (games.Count % 5 == 0)
+                        string[] game = players[index].PlayGame(GetRandomStartpos());
+                        
+
+                        lock (fileLock)
                         {
-                            lock (fileLock)
+                            numGamesPlayed++;
+                            numPositionsGenerated += game.Length;
+                            localPositions += game.Length;
+
+                                foreach (string fen in game)
+                                    writer.WriteLine(fen);
+                            
+                            // only flush occasionally if you want
+                            if ((numGamesPlayed % 10) == 0)
                             {
-                                foreach (string[] game in games)
-                                {
-                                    foreach (string fen in game)
-                                        writer.WriteLine(fen);
-                                }
-                                // only flush occasionally if you want
-                                if ((numGamesPlayed % 10) == 0)
-                                {
-                                    writer.Flush();
-                                    Console.WriteLine("------------------");
-                                    Console.WriteLine($"Total games          |  {numGamesPlayed}");
-                                    Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
-                                    Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
-                                    Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
-                                    Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
-                                    Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
-                                    Console.WriteLine("------------------\n");
-                                    localPositions = 0;
-                                    localwatch.Stop();
-                                    localwatch.Restart();
-                                    localwatch.Start();
-                                }
-                                games = [];
-                                if (numPositionsGenerated >= 500000)
-                                {
-                                    outputPath = outputPath.Substring(0, outputPath.Length - 4 - numOutputSwitches.ToString().Length) + numOutputSwitches++ + ".txt";
-                                    
-                                    Console.WriteLine("------------------------------------");
-                                    Console.WriteLine("More than 500k positions generated");
-                                    Console.WriteLine("Switching output path to " + outputPath + "...");
-                                    Console.WriteLine("------------------------------------");
-                                    writer = new(outputPath, append: true);
-                                    numGamesPlayed = 0;
-                                    numPositionsGenerated = 0;
-                                    totalwatch.Stop();
-                                    totalwatch.Restart();
-                                    totalwatch.Start();
-                                }
+                                writer.Flush();
+                                Console.WriteLine("------------------");
+                                Console.WriteLine($"Total games          |  {numGamesPlayed}");
+                                Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
+                                Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine("------------------\n");
+                                localPositions = 0;
+                                localwatch.Stop();
+                                localwatch.Restart();
+                                localwatch.Start();
                             }
                         }
+
                     }
                 });
             }
 
-            // **THIS AWAIT KEEPS THE STREAMWRITER OPEN FOREVER**  
-            // (since your tasks are infinite‑loops, this await never completes, which is what you want)
             await Task.WhenAll(gameTasks);
         }
 
