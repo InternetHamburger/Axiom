@@ -86,40 +86,41 @@ namespace Axiom.src.core.Search
 
                 // Initial call
                 // Very tight bounds, but pays off
-                NegaMax(depth, 0, alpha, beta);
+                NegaMax(depth, 0, NegativeInf, PositiveInf);
+                //NegaMax(depth, 0, alpha, beta);
                 maxDepth = depth;
-                int numReSearches = 0;
+                //int numReSearches = 0;
 
-                while (currentEval >= beta || currentEval <= alpha)
-                {
-                    if (numReSearches == 7)
-                    {
-                        if (currentEval >= beta)
-                        {
-                            alpha = eval - delta;
-                            NegaMax(depth, 0, alpha, PositiveInf);
-                        }
-                        else if (currentEval <= alpha)
-                        {
-                            beta = eval + delta;
-                            NegaMax(depth, 0, NegativeInf, beta);
-                        }
-                        break;
-                    }
-                    if (currentEval >= beta)
-                    {
-                        alpha = eval - delta;
-                        beta += 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
-                    }
-                    else if (currentEval <= alpha)
-                    {
-                        beta = eval + delta;
-                        alpha -= 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
-                    }
-                    numReSearches++;
-                }
+                //while (currentEval >= beta || currentEval <= alpha)
+                //{
+                //    if (numReSearches == 7)
+                //    {
+                //        if (currentEval >= beta)
+                //        {
+                //            alpha = eval - delta;
+                //            NegaMax(depth, 0, alpha, PositiveInf);
+                //        }
+                //        else if (currentEval <= alpha)
+                //        {
+                //            beta = eval + delta;
+                //            NegaMax(depth, 0, NegativeInf, beta);
+                //        }
+                //        break;
+                //    }
+                //    if (currentEval >= beta)
+                //    {
+                //        alpha = eval - delta;
+                //        beta += 3 * delta;
+                //        NegaMax(depth, 0, alpha, beta);
+                //    }
+                //    else if (currentEval <= alpha)
+                //    {
+                //        beta = eval + delta;
+                //        alpha -= 3 * delta;
+                //        NegaMax(depth, 0, alpha, beta);
+                //    }
+                //    numReSearches++;
+                //}
 
 
                 if (IsTimeUp || SearchedNodes >= NodeLimit)
