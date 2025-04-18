@@ -119,58 +119,71 @@ namespace Axiom
         public static string GetRandomStartpos()
         {
             Board board = new();
-            Random r = new Random();
-            
-            // Generate a random position after n ply
-            for (int i = 0; i < (r.Next(2) == 1 ? 10 : 9);)
+            Random r = new();
+
+            int targetPlies = r.Next(2) == 1 ? 10 : 9;
+
+            for (int i = 0; i < targetPlies;)
             {
-                Move[] moves = MoveGenerator.GetPseudoLegalMoves(board);
-                Move randMove = moves[r.Next(moves.Length)];
+                Move[] pseudoMoves = MoveGenerator.GetPseudoLegalMoves(board);
+                List<Move> legalMoves = [];
 
-                // Filter illegal castling moves
-                if (randMove.MoveFlag == Move.CastleFlag)
+                foreach (var move in pseudoMoves)
                 {
-                    if (board.IsInCheck(board.WhiteToMove))
+                    if (move.MoveFlag == Move.CastleFlag)
                     {
-                        continue;
+                        if (board.IsInCheck(board.WhiteToMove))
+                            continue;
+
+                        switch (move.TargetSquare)
+                        {
+                            case 62: // white short castle (g1)
+                                if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) continue;
+                                break;
+                            case 58: // white long castle (c1)
+                                if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) continue;
+                                break;
+                            case 6: // black short castle (g8)
+                                if (board.IsUnderAttack(5, false) || board.IsUnderAttack(6, false)) continue;
+                                break;
+                            case 2: // black long castle (c8)
+                                if (board.IsUnderAttack(2, false) || board.IsUnderAttack(3, false)) continue;
+                                break;
+                        }
                     }
-                    switch (randMove.TargetSquare)
+
+                    board.MakeMove(move);
+
+                    if (!board.IsInCheck(!board.WhiteToMove)) // move is legal
                     {
-                        case 62: // white short castle (g1)
-                            if (board.IsUnderAttack(61, true) || board.IsUnderAttack(62, true)) { continue; }
-                            break;
-                        case 58: // white loing castle (c1)
-                            if (board.IsUnderAttack(58, true) || board.IsUnderAttack(59, true)) { continue; }
-                            break;
-                        case 6: // black short castle (g8)
-                            if (board.IsUnderAttack(5, false) || board.IsUnderAttack(6, false)) { continue; }
-                            break;
-                        case 2: // black long castle (c8)
-                            if (board.IsUnderAttack(2, false) || board.IsUnderAttack(3, false)) { continue; }
-                            break;
+                        legalMoves.Add(move);
                     }
+
+                    board.UndoMove(move);
                 }
 
-                board.MakeMove(randMove);
-
-                // Filter illegal moves
-                if (board.IsInCheck(!board.WhiteToMove))
+                // If no legal moves, we hit checkmate or stalemate
+                if (legalMoves.Count == 0)
                 {
-                    board.UndoMove(randMove);
-                    continue;
+                    break;
                 }
+
+                // Pick a random legal move
+                Move chosenMove = legalMoves[r.Next(legalMoves.Count)];
+                board.MakeMove(chosenMove);
                 i++;
             }
 
             return board.Fen;
         }
+
     }
 
     public class Players
     {
-        private Engine engine;
-        int softNodes;
-        int hardNodes;
+        private readonly Engine engine;
+        readonly int softNodes;
+        readonly int hardNodes;
 
         public Players(int softNodes, int hardNodes)
         {
