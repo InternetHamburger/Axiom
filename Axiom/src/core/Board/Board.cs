@@ -17,7 +17,7 @@ namespace Axiom.src.core.Board
         public ulong ZobristHash;
 
 
-        public const int HlSize = 64;
+        public const int HlSize = 128;
         public NeuralNetwork nn;
 
 
@@ -30,7 +30,7 @@ namespace Axiom.src.core.Board
         {
             
             nn = new(768, HlSize);
-            nn.LoadFromFile("Axiom.src.core.Evaluation.NeuralNetwork.Setup.beans.bin", HlSize);
+            nn.LoadFromFile("Axiom.src.core.Evaluation.NeuralNetwork.Setup.quantised.bin", HlSize);
             Squares = new byte[64];
             BitBoards = new ulong[Piece.MaxPieceIndex + 1];
             KingSquares = new int[2];
