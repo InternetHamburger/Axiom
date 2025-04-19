@@ -17,7 +17,7 @@ namespace Axiom.src.core.Board
         public ulong ZobristHash;
 
 
-        public const int HlSize = 128;
+        public const int HlSize = 64;
         public NeuralNetwork nn;
 
 
