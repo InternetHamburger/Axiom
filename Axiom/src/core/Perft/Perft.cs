@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Axiom.src.core.Perft
 {
-    static class Perft
+    internal static class Perft
     {
 
         public const string path = @"Axiom.src.core.Perft.perftsuite.edp";
@@ -58,7 +58,7 @@ namespace Axiom.src.core.Perft
             total.Stop();
             Console.WriteLine("Total ms elpased: " + total.ElapsedMilliseconds);
             Console.WriteLine("Total positions: " + totalPositions);
-            Console.WriteLine("Knps: " + totalPositions / (ulong)total.ElapsedMilliseconds);
+            Console.WriteLine("Knps: " + (totalPositions / (ulong)total.ElapsedMilliseconds));
         }
 
         public static (int, ulong)[] ExtractDepthValues(string line)
@@ -118,8 +118,6 @@ namespace Axiom.src.core.Perft
 
 
             ulong totalNodes = 0;
-            ulong nodes = 0;
-
             foreach (Move move in moves)
             {
                 if (move.MoveFlag == Move.CastleFlag)
@@ -151,7 +149,7 @@ namespace Axiom.src.core.Perft
                     continue;
                 }
 
-                nodes = SearchNoBulk(board, depth - 1);
+                ulong nodes = SearchNoBulk(board, depth - 1);
                 board.UndoMove(move);
                 totalNodes += nodes;
 

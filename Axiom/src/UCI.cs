@@ -3,8 +3,6 @@ using Axiom.src.core.Evaluation;
 using Axiom.src.core.Perft;
 using Axiom.src.core.Search;
 using Axiom.src.core.Utility;
-using Nerual_Network.Chess;
-using Nerual_Network.Setup;
 using System.Collections.Immutable;
 
 namespace Axiom.src
@@ -12,7 +10,7 @@ namespace Axiom.src
     public class UCI
     {
 
-        private Engine engine;
+        private readonly Engine engine;
 
         public UCI()
         {
@@ -169,7 +167,7 @@ namespace Axiom.src
 
         public static int GetSearchTime(int timeLeftMs, int incrementMs)
         {
-            return timeLeftMs / 60 + incrementMs / 2;
+            return (timeLeftMs / 60) + (incrementMs / 2);
         }
 
         public static Move ReturnMove(Board board, string move)
@@ -278,7 +276,7 @@ namespace Axiom.src
             {
                 int mateLength = 999999999 - Math.Abs(eval) + 1;
                 mateLength *= eval < 0 ? -1 : 1;
-                return "mate " + mateLength / 2;
+                return "mate " + (mateLength / 2);
             }
             else
             {
