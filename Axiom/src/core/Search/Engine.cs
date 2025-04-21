@@ -177,7 +177,7 @@ namespace Axiom.src.core.Search
 
                 if (alpha >= beta)
                 {
-                    return beta;
+                    return ttEntry.Score;
                 }
             }
 
