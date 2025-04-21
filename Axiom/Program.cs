@@ -1,12 +1,4 @@
 ﻿using Axiom.src;
-using Axiom.src.core.Board;
-using Axiom.src.core.Move_Generation;
-using Axiom.src.core.Perft;
-using Nerual_Network.Chess;
-using Nerual_Network.Setup;
-using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Numerics;
 
 namespace Axiom
 {
