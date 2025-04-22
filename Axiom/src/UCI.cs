@@ -10,7 +10,7 @@ namespace Axiom.src
     public class UCI
     {
 
-        private readonly Engine engine;
+        private Engine engine;
 
         public UCI()
         {
@@ -27,6 +27,9 @@ namespace Axiom.src
             {
                 case "uci":
                     RespondUCI();
+                    break;
+                case "ucinewgame":
+                    engine = new();
                     break;
                 case "isready":
                     Console.WriteLine("readyok");
