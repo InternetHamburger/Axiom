@@ -14,7 +14,7 @@ namespace Axiom.src.core.Search
         const int PositiveInf = 999999999;
         const int NegativeInf = -999999999;
 
-        public int sizeTTMb = 1;
+        public int sizeTTMb = 32;
         const int sizeTTEntry = 16;
         ulong numTTEntries;
 

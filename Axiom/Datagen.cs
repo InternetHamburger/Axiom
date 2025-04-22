@@ -167,7 +167,8 @@ namespace Axiom
         {
             engine = new()
             {
-                printInfo = false
+                printInfo = false,
+                sizeTTMb = 1
             };
             this.softNodes = softNodes;
             this.hardNodes = hardNodes;
