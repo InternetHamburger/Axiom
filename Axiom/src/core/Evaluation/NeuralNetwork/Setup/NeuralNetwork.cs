@@ -2,6 +2,8 @@
 using Axiom.src.core.Utility;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Axiom.src.core.Evaluation.NeuralNetwork.Setup
 {
@@ -109,32 +111,7 @@ namespace Axiom.src.core.Evaluation.NeuralNetwork.Setup
             int idx0 = PreComputedMoveData.NNInputIndicies[0, piece, square];
             int idx1 = PreComputedMoveData.NNInputIndicies[1, piece, square];
 
-            short[] weights0 = HlWeightMatrix[idx0];
-            short[] weights1 = HlWeightMatrix[idx1];
-
-            int simdWidth = Vector<short>.Count; // Typically 8 or 16 depending on hardware
-            for (int i = 0; i < hlSize; i += simdWidth)
-            {
-                // Load short vectors
-                var w0Short = new Vector<short>(weights0, i);
-                var w1Short = new Vector<short>(weights1, i);
-
-                // Widen to int (produces 2 Vector<int> halves)
-                Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
-                Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
-
-                // Load accumulator ints
-                var acc0Lo = new Vector<int>(StmAccumulator, i);
-                var acc0Hi = new Vector<int>(StmAccumulator, i + (simdWidth / 2));
-                var acc1Lo = new Vector<int>(NstmAccumulator, i);
-                var acc1Hi = new Vector<int>(NstmAccumulator, i + (simdWidth / 2));
-
-                // Add
-                (acc0Lo + w0Lo).CopyTo(StmAccumulator, i);
-                (acc0Hi + w0Hi).CopyTo(StmAccumulator, i + (simdWidth / 2));
-                (acc1Lo + w1Lo).CopyTo(NstmAccumulator, i);
-                (acc1Hi + w1Hi).CopyTo(NstmAccumulator, i + (simdWidth / 2));
-            }
+            ApplyFeature(HlWeightMatrix[idx0], HlWeightMatrix[idx1], StmAccumulator, NstmAccumulator, true);
         }
 
         public void RemoveFeature(int piece, int square)
@@ -145,27 +122,56 @@ namespace Axiom.src.core.Evaluation.NeuralNetwork.Setup
             int idx0 = PreComputedMoveData.NNInputIndicies[0, piece, square];
             int idx1 = PreComputedMoveData.NNInputIndicies[1, piece, square];
 
-            short[] weights0 = HlWeightMatrix[idx0];
-            short[] weights1 = HlWeightMatrix[idx1];
+            ApplyFeature(HlWeightMatrix[idx0], HlWeightMatrix[idx1], StmAccumulator, NstmAccumulator, false);
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ApplyFeature(short[] weights0, short[] weights1, int[] acc0, int[] acc1, bool add)
+        {
             int simdWidth = Vector<short>.Count;
-            for (int i = 0; i < hlSize; i += simdWidth)
-            {
-                var w0Short = new Vector<short>(weights0, i);
-                var w1Short = new Vector<short>(weights1, i);
 
+            ref short w0Ref = ref MemoryMarshal.GetArrayDataReference(weights0);
+            ref short w1Ref = ref MemoryMarshal.GetArrayDataReference(weights1);
+            ref int acc0Ref = ref MemoryMarshal.GetArrayDataReference(acc0);
+            ref int acc1Ref = ref MemoryMarshal.GetArrayDataReference(acc1);
+
+            for (int i = 0; i < weights0.Length; i += simdWidth)
+            {
+                // Load short vectors
+                var w0Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref w0Ref, i)));
+                var w1Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref w1Ref, i)));
+
+                // Widen to int vectors
                 Vector.Widen(w0Short, out var w0Lo, out var w0Hi);
                 Vector.Widen(w1Short, out var w1Lo, out var w1Hi);
 
-                var acc0Lo = new Vector<int>(StmAccumulator, i);
-                var acc0Hi = new Vector<int>(StmAccumulator, i + (simdWidth / 2));
-                var acc1Lo = new Vector<int>(NstmAccumulator, i);
-                var acc1Hi = new Vector<int>(NstmAccumulator, i + (simdWidth / 2));
+                // Load accumulators
+                var acc0Lo = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i)));
+                var acc0Hi = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i + simdWidth / 2)));
+                var acc1Lo = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i)));
+                var acc1Hi = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i + simdWidth / 2)));
 
-                (acc0Lo - w0Lo).CopyTo(StmAccumulator, i);
-                (acc0Hi - w0Hi).CopyTo(StmAccumulator, i + (simdWidth / 2));
-                (acc1Lo - w1Lo).CopyTo(NstmAccumulator, i);
-                (acc1Hi - w1Hi).CopyTo(NstmAccumulator, i + (simdWidth / 2));
+                // Add or subtract
+                if (add)
+                {
+                    acc0Lo += w0Lo;
+                    acc0Hi += w0Hi;
+                    acc1Lo += w1Lo;
+                    acc1Hi += w1Hi;
+                }
+                else
+                {
+                    acc0Lo -= w0Lo;
+                    acc0Hi -= w0Hi;
+                    acc1Lo -= w1Lo;
+                    acc1Hi -= w1Hi;
+                }
+
+                // Store back
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i)), acc0Lo);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i + simdWidth / 2)), acc0Hi);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i)), acc1Lo);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i + simdWidth / 2)), acc1Hi);
             }
         }
 

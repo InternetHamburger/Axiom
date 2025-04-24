@@ -4,19 +4,33 @@ namespace Axiom.src.core.Evaluation
 {
     public class MoveOrderer
     {
-        public int[,] HistoryTable;
+        public int[,,] HistoryTable;
         public Move[] KillerMoves;
 
         public MoveOrderer()
         {
-            HistoryTable = new int[Piece.MaxPieceIndex + 1, 64];
+            HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
             KillerMoves = new Move[256];
         }
 
         public void Init()
         {
-            HistoryTable = new int[Piece.MaxPieceIndex + 1, 64];
-            KillerMoves = new Move[256];
+            for (int i = 0; i < 2; i++)
+            {
+                for(int j = 0; j < Piece.MaxPieceIndex + 1; j++)
+                {
+                    for (int k = 0; k < 64; k++)
+                    {
+                        HistoryTable[i, j, k] = 0;
+                    }
+                }
+            }
+            for (int i = 0; i < 256; i++)
+            {
+                KillerMoves[i] = new Move(0);
+            }
+            //HistoryTable = new int[2, Piece.MaxPieceIndex + 1, 64];
+            //KillerMoves = new Move[256];
         }
 
         public void OrderMoves(Move[] moves, Board.Board board, Move ttMove, int plyFromRoot)
@@ -76,9 +90,10 @@ namespace Axiom.src.core.Evaluation
             }
             else
             {
-                int index2 = board.Squares[move.StartSquare];
+                int index1 = board.WhiteToMove ? 0 : 1;
+                int index2 = board.Squares[move.TargetSquare];
                 int index3 = move.TargetSquare;
-                return HistoryTable[index2, index3] - 10000;
+                return HistoryTable[index1, index2, index3] - 10000;
             }
         }
 
@@ -92,16 +107,18 @@ namespace Axiom.src.core.Evaluation
 
         public void UpdateHistoryTableBetaCutoff(Board.Board board, Move move, int depth)
         {
-            int index2 = board.Squares[move.StartSquare];
+            int index1 = board.WhiteToMove ? 0 : 1;
+            int index2 = board.Squares[move.TargetSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index2, index3] = Math.Clamp(HistoryTable[index2, index3] + (3 * depth * depth), 0, 10000);
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + (3 * depth * depth), 0, 10000);
         }
 
         public void UpdateHistoryTableAlphaRaise(Board.Board board, Move move, int depth)
         {
-            int index2 = board.Squares[move.StartSquare];
+            int index1 = board.WhiteToMove ? 0 : 1;
+            int index2 = board.Squares[move.TargetSquare];
             int index3 = move.TargetSquare;
-            HistoryTable[index2, index3] = Math.Clamp(HistoryTable[index2, index3] + (2 * depth), 0, 10000);
+            HistoryTable[index1, index2, index3] = Math.Clamp(HistoryTable[index1, index2, index3] + (2 * depth), 0, 10000);
         }
     }
 }
