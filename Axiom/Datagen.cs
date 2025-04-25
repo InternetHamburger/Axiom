@@ -25,7 +25,7 @@ namespace Axiom
         public Datagen(int threads)
         {
             players = new Players[threads];
-            for(int i = 0; i < threads; i++)
+            for (int i = 0; i < threads; i++)
             {
                 players[i] = new(SOFT_NODE_LIMIT, HARD_NODE_LIMIT);
             }
@@ -38,14 +38,8 @@ namespace Axiom
 
             using StreamWriter writer = new(outputPath, append: true);
 
-            int numGamesPlayed = 0;
-            int numPositionsGenerated = 0;
-            int localPositions = 0;
-            var totalwatch = new Stopwatch();
-            totalwatch.Start();
-
-            var localwatch = new Stopwatch();
-            localwatch.Start();
+            int globalPositions = 0;
+            int globalGames = 0;
 
             // start N infinite‑loop tasks
             Task[] gameTasks = new Task[numConcurrentGames];
@@ -54,36 +48,52 @@ namespace Axiom
                 int index = i; // capture
                 gameTasks[i] = Task.Run(() =>
                 {
+                    var totalClock = new Stopwatch();
+                    var localClock = new Stopwatch();
+                    localClock.Start();
+                    totalClock.Start();
+
+                    int localPositions = 0;
+
+                    List<string[]> games = [];
+
                     while (true)
                     {
                         string[] game = players[index].PlayGame(GetRandomStartpos());
+                        games.Add(game);
                         
 
-                        lock (fileLock)
+                        if (games.Count % 10 == 0)
                         {
-                            numGamesPlayed++;
-                            numPositionsGenerated += game.Length;
-                            localPositions += game.Length;
-
-                                foreach (string fen in game)
-                                    writer.WriteLine(fen);
-                            
-                            // only flush occasionally if you want
-                            if ((numGamesPlayed % 10) == 0)
+                            lock (fileLock)
                             {
+                                globalGames += games.Count;
+                                foreach (string[] g in games)
+                                {
+                                    localPositions += g.Length;
+                                    globalPositions += g.Length;
+                                    foreach (string fen in g)
+                                    {
+                                        writer.WriteLine(fen);
+                                    }
+                                }
+
+                                // only flush occasionally if you want
+
                                 writer.Flush();
                                 Console.WriteLine("------------------");
-                                Console.WriteLine($"Total games          |  {numGamesPlayed}");
-                                Console.WriteLine($"Total positions      |  {numPositionsGenerated}");
-                                Console.WriteLine($"Time elapsed         |  {totalwatch.Elapsed.TotalSeconds:F1}s");
-                                Console.WriteLine($"Avg positions/sec    |  {Math.Round(numPositionsGenerated / totalwatch.Elapsed.TotalSeconds)}");
-                                Console.WriteLine($"Local time           |  {localwatch.Elapsed.TotalSeconds:F1}s");
-                                Console.WriteLine($"local positions/sec  |  {Math.Round(localPositions / localwatch.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Total games          |  {globalGames}");
+                                Console.WriteLine($"Total positions      |  {globalPositions}");
+                                Console.WriteLine($"Time elapsed         |  {totalClock.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"Avg positions/sec    |  {Math.Round(globalPositions / totalClock.Elapsed.TotalSeconds)}");
+                                Console.WriteLine($"Local time           |  {localClock.Elapsed.TotalSeconds:F1}s");
+                                Console.WriteLine($"Local positions/sec  |  {Math.Round(localPositions / localClock.Elapsed.TotalSeconds)}");
                                 Console.WriteLine("------------------\n");
                                 localPositions = 0;
-                                localwatch.Stop();
-                                localwatch.Restart();
-                                localwatch.Start();
+                                localClock.Stop();
+                                localClock.Restart();
+                                localClock.Start();
+                                games = [];
                             }
                         }
 
@@ -168,7 +178,8 @@ namespace Axiom
             engine = new()
             {
                 printInfo = false,
-                sizeTTMb = 1
+                sizeTTMb = 1,
+                ClearTTBetweenSearches = false
             };
             this.softNodes = softNodes;
             this.hardNodes = hardNodes;
@@ -198,14 +209,14 @@ namespace Axiom
 
                 engine.board.MakeMove(engine.bestMoveThisIteration);
 
-                
+
             }
 
             // Slice off
             string[] result = new string[gameLength];
             Array.Copy(fens, result, gameLength);
 
-            for(int i = 0; i < gameLength; i++)
+            for (int i = 0; i < gameLength; i++)
             {
                 result[i] += gameResult;
             }
@@ -217,7 +228,7 @@ namespace Axiom
         {
             Move[] moves = MoveGenerator.GetPseudoLegalMoves(b);
 
-            foreach(Move move in moves)
+            foreach (Move move in moves)
             {
                 // Filter illegal castling moves
                 if (move.MoveFlag == Move.CastleFlag)
