@@ -28,6 +28,7 @@ namespace Axiom.src.core.Search
         public int currentEval;
         public int maxDepth;
         public bool printInfo;
+        public bool ClearTTBetweenSearches;
 
         public double startTime;
         public double timeLimit;
@@ -48,6 +49,7 @@ namespace Axiom.src.core.Search
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
             printInfo = true;
+            ClearTTBetweenSearches = true;
             //NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -144,7 +146,10 @@ namespace Axiom.src.core.Search
             //{
             //    TT[i] = new();
             //}
-            Array.Clear(TT, 0, TT.Length);
+            if (ClearTTBetweenSearches)
+            {
+                Array.Clear(TT, 0, TT.Length);
+            }
             moveOrderer.Init();
             SearchedNodes = 0;
             startTime = DateTime.Now.TimeOfDay.TotalMilliseconds;
