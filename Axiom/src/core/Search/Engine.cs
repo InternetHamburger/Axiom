@@ -291,12 +291,20 @@ namespace Axiom.src.core.Search
                 }
                 else
                 {
-                    int reduction = (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove)) ? 1 : 0;
-                    score = -NegaMax(depth - 2 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha);
-                    if (score > alpha)
+                    if (depth >= 2 && i >= 1)
                     {
-                        score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -beta, -alpha);
+                        int reduction = (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove)) ? 1 : 0;
+                        score = -NegaMax(depth - 2 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha);
+                        if (score > alpha)
+                        {
+                            score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -beta, -alpha);
+                        }
                     }
+                    else
+                    {
+                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    }
+                    
                 }
 
                 board.UndoMove(move);
