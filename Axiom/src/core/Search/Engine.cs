@@ -49,7 +49,7 @@ namespace Axiom.src.core.Search
             TT = new TTEntry[numTTEntries];
             moveOrderer = new();
             printInfo = true;
-            ClearTTBetweenSearches = true;
+            ClearTTBetweenSearches = false;
             //NegaMax(1, 0, NegativeInf, PositiveInf);
         }
 
@@ -165,7 +165,7 @@ namespace Axiom.src.core.Search
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
 
-            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash)
+            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash && !IsPvNode)
             {
                 if (ttEntry.IsExact)
                 {
