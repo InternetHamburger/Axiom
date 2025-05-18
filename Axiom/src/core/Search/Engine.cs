@@ -18,6 +18,8 @@ namespace Axiom.src.core.Search
         const int sizeTTEntry = 16;
         ulong numTTEntries;
 
+        public static int MaxPly = 255;
+
         public int GamePhase;
         public const int TotalPhase = 24;
 
@@ -293,7 +295,7 @@ namespace Axiom.src.core.Search
                 {
                     if (depth >= 2 && i >= 1)
                     {
-                        int reduction = 1;
+                        int reduction = SearchConstants.LMR_TABLE[depth, i];
                         if (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove))
                             reduction++;
 
