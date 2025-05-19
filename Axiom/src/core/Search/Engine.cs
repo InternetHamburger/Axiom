@@ -225,9 +225,11 @@ namespace Axiom.src.core.Search
                 }
             }
 
+
             Move[] pseudoLegalMoves = MoveGenerator.GetPseudoLegalMoves(board);
             moveOrderer.OrderMoves(pseudoLegalMoves, board, new Move(ttEntry.BestMove), plyFromRoot);
 
+            List<Move> quietMoves = [];
 
             int numLegalMoves = 0;
             int bestScore = NegativeInf;
@@ -272,7 +274,7 @@ namespace Axiom.src.core.Search
                     continue;
                 }
 
-
+                if (!isCapture) quietMoves.Add(move);
 
                 numLegalMoves++;
 
@@ -341,6 +343,11 @@ namespace Axiom.src.core.Search
                     if (board.Squares[move.TargetSquare] == 0) // Is a quiet move
                     {
                         moveOrderer.UpdateHistoryTableBetaCutoff(board, move, depth);
+                        foreach(Move qMove in quietMoves)
+                        {
+                            if (Move.SameMove(qMove, move)) continue;
+                            moveOrderer.UpdateHistoryTableBadQuiet(board, qMove, depth);
+                        }
                         moveOrderer.KillerMoves[plyFromRoot] = move;
                     }
                     TT[TTIndex] = new(bestScore, depth, TTEntry.LowerBoundFlag, bestMove.Value, board.ZobristHash);
