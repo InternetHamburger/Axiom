@@ -295,7 +295,7 @@ namespace Axiom.src.core.Search
                 {
                     if (depth >= 2 && i >= 1)
                     {
-                        int reduction = SearchConstants.LMR_TABLE[depth, i];
+                        int reduction = SearchConstants.LMR_TABLE[Math.Min(depth, MaxPly), Math.Min(i, MoveGenerator.MaxNumMoves)];
                         if (i >= 4 && depth >= 3 && !isCapture && !board.IsInCheck(board.WhiteToMove))
                             reduction++;
 
