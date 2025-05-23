@@ -211,7 +211,7 @@ namespace Axiom.src.core.Search
             }
             // Null Move Pruning
             const int NULL_MOVE_MIN_DEPTH = 3;
-            const int R = 2; // Reduction factor for null move pruning
+            int R = depth > 5 ? 3 : 2; // Reduction factor for null move pruning
 
             if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase) && !IsPvNode && staticEval >= beta)
             {
