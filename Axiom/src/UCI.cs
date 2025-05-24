@@ -79,6 +79,7 @@ namespace Axiom.src
         {
             Console.WriteLine("id name Axiom");
             Console.WriteLine("option name Hash type spin default 32 min 1 max 4096");
+            Console.WriteLine("option name Threads type spin default 1 min 1 max 1");
             Console.WriteLine("uciok");
         }
 
@@ -91,6 +92,8 @@ namespace Axiom.src
             {
                 case "Hash":
                     engine.SetTTSize(int.Parse(value));
+                    break;
+                case "Threads":
                     break;
                 default:
                     Console.WriteLine($"Unknown option {optionType}");
