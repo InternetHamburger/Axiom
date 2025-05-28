@@ -166,8 +166,9 @@ namespace Axiom.src.core.Search
             bool IsPvNode = (beta - alpha) > 1;
             ulong TTIndex = board.ZobristHash % numTTEntries;
             TTEntry ttEntry = TT[TTIndex];
+            bool ttHit = ttEntry.ZobristHash == board.ZobristHash;
 
-            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttEntry.ZobristHash == board.ZobristHash && !IsPvNode)
+            if (ttEntry.Depth >= depth && plyFromRoot > 0 && ttHit && !IsPvNode)
             {
                 if (ttEntry.IsExact)
                 {
@@ -202,6 +203,12 @@ namespace Axiom.src.core.Search
                     return 0;
                 }
             }
+
+            if (plyFromRoot > 0 && depth >= 3 && IsPvNode && (!ttHit || ttEntry.BestMove == 0))
+            {
+                depth--;
+            }
+
             bool InCheck = board.IsInCheck(board.WhiteToMove);
             int staticEval = board.Eval;
             int margin = 150 * depth; // e.g. 150 * depth
