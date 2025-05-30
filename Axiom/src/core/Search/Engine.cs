@@ -92,7 +92,7 @@ namespace Axiom.src.core.Search
 
                 // Initial call
                 // Very tight bounds, but pays off
-                NegaMax(depth, 0, alpha, beta);
+                NegaMax(depth, 0, alpha, beta, false);
                 maxDepth = depth;
                 int numReSearches = 0;
 
@@ -103,12 +103,12 @@ namespace Axiom.src.core.Search
                         if (currentEval >= beta)
                         {
                             alpha = eval - delta;
-                            NegaMax(depth, 0, alpha, PositiveInf);
+                            NegaMax(depth, 0, alpha, PositiveInf, false);
                         }
                         else if (currentEval <= alpha)
                         {
                             beta = eval + delta;
-                            NegaMax(depth, 0, NegativeInf, beta);
+                            NegaMax(depth, 0, NegativeInf, beta, false);
                         }
                         break;
                     }
@@ -116,13 +116,13 @@ namespace Axiom.src.core.Search
                     {
                         alpha = eval - delta;
                         beta += 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
+                        NegaMax(depth, 0, alpha, beta, false);
                     }
                     else if (currentEval <= alpha)
                     {
                         beta = eval + delta;
                         alpha -= 3 * delta;
-                        NegaMax(depth, 0, alpha, beta);
+                        NegaMax(depth, 0, alpha, beta, false);
                     }
                     numReSearches++;
                 }
@@ -142,7 +142,7 @@ namespace Axiom.src.core.Search
         {
             maxDepth = 0;
             eval = 0;
-
+            
             //TT = new TTEntry[numTTEntries];
             //for (ulong i = 0; i < numTTEntries; i++)
             //{
@@ -161,7 +161,7 @@ namespace Axiom.src.core.Search
         }
 
 
-        private int NegaMax(int depth, int plyFromRoot, int alpha, int beta)
+        private int NegaMax(int depth, int plyFromRoot, int alpha, int beta, bool cutnode)
         {
             bool IsPvNode = (beta - alpha) > 1;
             ulong TTIndex = board.ZobristHash % numTTEntries;
@@ -204,7 +204,7 @@ namespace Axiom.src.core.Search
                 }
             }
 
-            if (plyFromRoot > 0 && depth >= 3 && IsPvNode && (!ttHit || ttEntry.BestMove == 0))
+            if (plyFromRoot > 0 && depth >= 3 && (IsPvNode || cutnode) && (!ttHit || ttEntry.BestMove == 0))
             {
                 depth--;
             }
@@ -223,7 +223,7 @@ namespace Axiom.src.core.Search
             if (depth >= NULL_MOVE_MIN_DEPTH && !InCheck && !board.InEndgame(GamePhase) && !IsPvNode && staticEval >= beta)
             {
                 board.MakeNullMove();
-                int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1);
+                int nullMoveScore = -NegaMax(depth - 1 - R, plyFromRoot + 1, -beta, -beta + 1, !cutnode);
                 board.UndoNullMove();
 
                 if (nullMoveScore >= beta)
@@ -296,7 +296,7 @@ namespace Axiom.src.core.Search
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
                 {
-                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                    score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha, IsPvNode ? false : !cutnode);
                 }
                 else
                 {
@@ -307,15 +307,15 @@ namespace Axiom.src.core.Search
                             reduction++;
 
 
-                        score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha);
+                        score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha, true);
                         if (score > alpha)
                         {
-                            score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                            score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha, !cutnode);
                         }
                     }
                     else
                     {
-                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha);
+                        score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha, !cutnode);
                     }
                     
                 }
