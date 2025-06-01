@@ -7,7 +7,7 @@ namespace Axiom
         static void Main()
         {
             UCI uci = new();
-
+            uci.PrintLogo();
             string? message = Console.ReadLine();
 
             while (message != "quit")
