@@ -75,6 +75,16 @@ namespace Axiom.src
                     break;
             }
         }
+
+        public void PrintLogo()
+        {
+            Console.WriteLine("    _   __    __ _____  ___    _     _");
+            Console.WriteLine("   / \\  \\ \\  / /|_   _|/ _ \\  / \\   / \\");
+            Console.WriteLine("  / _ \\  \\ \\/ /   | | / / \\ \\/ / \\_/ \\ \\");
+            Console.WriteLine(" / ___ \\ / /\\ \\  _| |_\\ \\_/ / /       \\ \\");
+            Console.WriteLine("/_/   \\_\\_/  \\_\\|_____|\\___/_/         \\_\\");
+        }
+
         private static void RespondUCI()
         {
             Console.WriteLine("id name Axiom");
