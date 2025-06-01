@@ -330,7 +330,7 @@ namespace Axiom.src.core.Search
                 if (score > bestScore)
                 {
                     bestScore = score;
-                    bestMove = move;
+                    
                     if (plyFromRoot == 0)
                     {
                         currentBestMove = move;
@@ -338,6 +338,7 @@ namespace Axiom.src.core.Search
                     }
                     if (score > alpha)
                     {
+                        bestMove = move;
                         alphaWasRaised = true;
                         alpha = score;
                     }
@@ -373,7 +374,7 @@ namespace Axiom.src.core.Search
             }
             else
             {
-                TT[TTIndex] = new(bestScore, depth, TTEntry.UpperBoundFlag, bestMove.Value, board.ZobristHash);
+                TT[TTIndex] = new(bestScore, depth, TTEntry.UpperBoundFlag, ttEntry.BestMove, board.ZobristHash);
             }
             return bestScore;
         }
