@@ -175,6 +175,71 @@ namespace Axiom.src.core.Evaluation.NeuralNetwork.Setup
             }
         }
 
+        public void MoveFeature(int piece, int fromSquare, int toSquare)
+        {
+            if (piece == 0) return;
+
+            fromSquare = BoardUtility.FlipSquare(fromSquare);
+            toSquare = BoardUtility.FlipSquare(toSquare);
+
+            int idx0From = PreComputedMoveData.NNInputIndicies[0, piece, fromSquare];
+            int idx1From = PreComputedMoveData.NNInputIndicies[1, piece, fromSquare];
+
+            int idx0To = PreComputedMoveData.NNInputIndicies[0, piece, toSquare];
+            int idx1To = PreComputedMoveData.NNInputIndicies[1, piece, toSquare];
+
+            ApplyMoveFeature(HlWeightMatrix[idx0From], HlWeightMatrix[idx1From], HlWeightMatrix[idx0To], HlWeightMatrix[idx1To], StmAccumulator, NstmAccumulator);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ApplyMoveFeature(short[] w0From, short[] w1From, short[] w0To, short[] w1To, int[] acc0, int[] acc1)
+        {
+            int simdWidth = Vector<short>.Count;
+
+            ref short wf0 = ref MemoryMarshal.GetArrayDataReference(w0From);
+            ref short wf1 = ref MemoryMarshal.GetArrayDataReference(w1From);
+            ref short wt0 = ref MemoryMarshal.GetArrayDataReference(w0To);
+            ref short wt1 = ref MemoryMarshal.GetArrayDataReference(w1To);
+            ref int acc0Ref = ref MemoryMarshal.GetArrayDataReference(acc0);
+            ref int acc1Ref = ref MemoryMarshal.GetArrayDataReference(acc1);
+
+            for (int i = 0; i < w0From.Length; i += simdWidth)
+            {
+                // Load old (from) weights
+                var wf0Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref wf0, i)));
+                var wf1Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref wf1, i)));
+
+                // Load new (to) weights
+                var wt0Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref wt0, i)));
+                var wt1Short = Unsafe.ReadUnaligned<Vector<short>>(ref Unsafe.As<short, byte>(ref Unsafe.Add(ref wt1, i)));
+
+                // Compute delta = to - from
+                var d0Short = wt0Short - wf0Short;
+                var d1Short = wt1Short - wf1Short;
+
+                // Widen to int
+                Vector.Widen(d0Short, out var d0Lo, out var d0Hi);
+                Vector.Widen(d1Short, out var d1Lo, out var d1Hi);
+
+                // Load accumulators
+                var acc0Lo = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i)));
+                var acc0Hi = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i + simdWidth / 2)));
+                var acc1Lo = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i)));
+                var acc1Hi = Unsafe.ReadUnaligned<Vector<int>>(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i + simdWidth / 2)));
+
+                // Apply delta
+                acc0Lo += d0Lo;
+                acc0Hi += d0Hi;
+                acc1Lo += d1Lo;
+                acc1Hi += d1Hi;
+
+                // Store results
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i)), acc0Lo);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc0Ref, i + simdWidth / 2)), acc0Hi);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i)), acc1Lo);
+                Unsafe.WriteUnaligned(ref Unsafe.As<int, byte>(ref Unsafe.Add(ref acc1Ref, i + simdWidth / 2)), acc1Hi);
+            }
+        }
 
         public void LoadFromFile(string filePath, int hlSize)
         {

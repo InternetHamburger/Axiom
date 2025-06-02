@@ -74,8 +74,7 @@ namespace Axiom.src.core.Board
 
             // Update NNUE accumulators
             // Implicitly handles captures
-            nn.RemoveFeature(movedPiece, startSquare);
-            nn.AddFeature(movedPiece, targetSquare);
+            nn.MoveFeature(movedPiece, startSquare, targetSquare);
             nn.RemoveFeature(capturedPiece, targetSquare);
 
             BitBoards[movedPiece] ^= (1UL << startSquare) | (1UL << targetSquare);
@@ -225,8 +224,7 @@ namespace Axiom.src.core.Board
             Squares[targetSquare] = capturedPiece;
             BitBoards[movedPiece] ^= (1UL << startSquare) | (1UL << targetSquare);
 
-            nn.AddFeature(movedPiece, startSquare);
-            nn.RemoveFeature(movedPiece, targetSquare);
+            nn.MoveFeature(movedPiece, targetSquare, startSquare);
             nn.AddFeature(capturedPiece, targetSquare);
 
             if (capturedPiece != Piece.None)
