@@ -4,6 +4,7 @@ using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Axiom.src.core.Search
 {
@@ -239,11 +240,14 @@ namespace Axiom.src.core.Search
             int numLegalMoves = 0;
             int bestScore = NegativeInf;
             bool alphaWasRaised = false;
+            bool skipQuiets = false;
             Move bestMove = Move.NullMove;
             for (int i = 0; i < pseudoLegalMoves.Length; i++)
             {
                 Move move = pseudoLegalMoves[i];
-                
+
+                bool isCapture = board.Squares[move.TargetSquare] != 0;
+                if (skipQuiets && !isCapture && !move.IsPromotion) continue;
 
                 // Filter illegal castling moves
                 if (move.MoveFlag == Move.CastleFlag)
@@ -269,7 +273,7 @@ namespace Axiom.src.core.Search
                     }
                 }
 
-                bool isCapture = board.Squares[move.TargetSquare] != 0;
+                
                 board.MakeMove(move);
 
                 // Filter illegal moves
@@ -290,8 +294,17 @@ namespace Axiom.src.core.Search
                 if (depth <= 3 && staticEval + futilitymargin <= alpha && !isCapture && !InCheck && i > 1 && !move.IsPromotion && plyFromRoot > 0)
                 {
                     board.UndoMove(move);
+                    skipQuiets = true;
                     continue;
                 }
+
+                if (!isCapture && !move.IsPromotion && i >= 5 + 2 * depth * depth && bestScore > (NegativeInf + 255) && !IsPvNode)
+                {
+                    board.UndoMove(move);
+                    skipQuiets = true;
+                    continue;
+                }
+
                 int score;
                 int extension = board.IsInCheck(board.WhiteToMove) ? 1 : 0;
                 if (i == 0)
@@ -308,7 +321,7 @@ namespace Axiom.src.core.Search
 
 
                         score = -NegaMax(depth - 1 - reduction + extension, plyFromRoot + 1, -alpha - 1, -alpha, true);
-                        if (score > alpha)
+                        if (score > alpha && (IsPvNode || reduction > 0))
                         {
                             score = -NegaMax(depth - 1 + extension, plyFromRoot + 1, -beta, -alpha, !cutnode);
                         }
