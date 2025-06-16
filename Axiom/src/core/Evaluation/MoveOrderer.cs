@@ -1,4 +1,5 @@
 ﻿using Axiom.src.core.Board;
+using Axiom.src.core.Utility;
 
 namespace Axiom.src.core.Evaluation
 {
@@ -6,6 +7,8 @@ namespace Axiom.src.core.Evaluation
     {
         public int[,,] HistoryTable;
         public Move[] KillerMoves;
+
+        const int MaxHistory = 2 << 14; // 16384
 
         public MoveOrderer()
         {
@@ -21,7 +24,7 @@ namespace Axiom.src.core.Evaluation
                 {
                     for (int k = 0; k < 64; k++)
                     {
-                        HistoryTable[i, j, k] = 0;
+                        //HistoryTable[i, j, k] = 0;
                     }
                 }
             }
@@ -93,7 +96,7 @@ namespace Axiom.src.core.Evaluation
                 int index1 = board.WhiteToMove ? 0 : 1;
                 int index2 = board.Squares[move.StartSquare];
                 int index3 = move.TargetSquare;
-                return HistoryTable[index1, index2, index3] - 10000;
+                return HistoryTable[index1, index2, index3] - MaxHistory;
             }
         }
 
@@ -111,9 +114,9 @@ namespace Axiom.src.core.Evaluation
             int index2 = board.Squares[move.StartSquare];
             int index3 = move.TargetSquare;
 
-            int bonus = depth * depth;
+            int bonus = 300 * depth - 250;
 
-            HistoryTable[index1, index2, index3] += bonus - bonus * HistoryTable[index1, index2, index3] / 10000;
+            HistoryTable[index1, index2, index3] += bonus - bonus * HistoryTable[index1, index2, index3] / MaxHistory;
         }
 
         public void UpdateHistoryTableBadQuiet(Board.Board board, Move move, int depth)
@@ -122,9 +125,9 @@ namespace Axiom.src.core.Evaluation
             int index2 = board.Squares[move.StartSquare];
             int index3 = move.TargetSquare;
 
-            int malus = -depth * depth;
+            int malus = -300 * depth + 250;
 
-            HistoryTable[index1, index2, index3] += malus - malus * HistoryTable[index1, index2, index3] / 10000;
+            HistoryTable[index1, index2, index3] += malus - Math.Abs(malus) * HistoryTable[index1, index2, index3] / MaxHistory;
         }
     }
 }
