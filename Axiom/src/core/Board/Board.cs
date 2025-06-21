@@ -1,6 +1,7 @@
 ﻿using Axiom.src.core.Move_Generation;
 using Axiom.src.core.Utility;
 using Axiom.src.core.Evaluation.NeuralNetwork.Setup;
+using System.ComponentModel;
 
 namespace Axiom.src.core.Board
 {
@@ -344,6 +345,7 @@ namespace Axiom.src.core.Board
 
             if (IsWhite)
             {
+                BitBoardUtlity.PrintBitBoard(bitboard);
                 if (((((bitboard & MoveGenConstants.WhitePawnCaptureLeftMask) << 7) | ((bitboard & MoveGenConstants.WhitePawnCaptureRightMask) << 9)) & BitBoards[Piece.WhitePawn]) != 0)
                 {
                     return true;
@@ -406,6 +408,59 @@ namespace Axiom.src.core.Board
 
 
             return false;
+        }
+
+        public ulong Attackers(int square, ulong occupied)
+        {
+            ulong attackers = 0UL;
+            ulong squareBitboard = 1UL << square;
+
+            attackers |= (squareBitboard & MoveGenConstants.WhitePawnCaptureRightMask) << 9 & BitBoards[Piece.WhitePawn];
+            attackers |= (squareBitboard & MoveGenConstants.WhitePawnCaptureLeftMask) << 7 & BitBoards[Piece.WhitePawn];
+            attackers |= (squareBitboard & MoveGenConstants.BlackPawnCaptureRightMask) >> 9 & BitBoards[Piece.BlackPawn];
+            attackers |= (squareBitboard & MoveGenConstants.BlackPawnCaptureLeftMask) >> 7 & BitBoards[Piece.BlackPawn];
+            attackers |= PreComputedMoveData.KnightAttacks[square] & (BitBoards[Piece.WhiteKnight] | BitBoards[Piece.BlackKnight]);
+            attackers |= PreComputedMoveData.KingAttacks[square] & (BitBoards[Piece.WhiteKing] | BitBoards[Piece.BlackKing]);
+
+            ulong sliders = (BitBoards[Piece.WhiteBishop] | BitBoards[Piece.WhiteRook] | BitBoards[Piece.WhiteQueen] | BitBoards[Piece.BlackBishop] | BitBoards[Piece.BlackRook] | BitBoards[Piece.BlackQueen]) & occupied;
+            ulong nonSliders = (AllPieceBitBoard ^ sliders) & occupied;
+            for (int directionIndex = 0; directionIndex < 8; directionIndex++)
+            {
+
+                if ((MoveGenConstants.RayMasks[square, directionIndex] & sliders) == 0)
+                {
+                    continue;
+                }
+
+                for (int n = 0; n < MoveGenConstants.numSquaresToEdge[square, directionIndex]; n++)
+                {
+
+                    int targetSquare = square + (MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1));
+                    ulong targetBitboard = 1UL << targetSquare;
+                    byte pieceOnTargetSquare = Squares[targetSquare];
+
+                    // Blocked by non-slider piece
+                    if ((targetBitboard & nonSliders) != 0)
+                    {
+                        break;
+                    }
+
+
+                    if (Piece.IsDiagonalSlider(pieceOnTargetSquare) && directionIndex > 3)
+                    {
+                        attackers |= targetBitboard;
+                        break;
+                    }
+                    else if (Piece.IsOrthogonalSlider(pieceOnTargetSquare) && directionIndex < 4)
+                    {
+                        attackers |= targetBitboard;
+                        break;
+                    }
+
+                }
+            }
+
+            return attackers;
         }
 
         public void SetPosition(string fen)
