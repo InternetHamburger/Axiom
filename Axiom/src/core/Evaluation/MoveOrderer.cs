@@ -1,5 +1,5 @@
 ﻿using Axiom.src.core.Board;
-using Axiom.src.core.Utility;
+using Axiom.src.core.Search;
 
 namespace Axiom.src.core.Evaluation
 {
@@ -86,10 +86,11 @@ namespace Axiom.src.core.Evaluation
             }
             if (board.Squares[move.TargetSquare] != 0)
             {
-                int captureMaterialDelta = CaptureScoreDelta(move, board);
-                int moveScore = captureMaterialDelta;
+                bool goodCapture = StaticExchangeEvaluation.SEE(board, move, 0);
 
-                return moveScore;
+                int captureMaterialDelta = CaptureScoreDelta(move, board);
+
+                return goodCapture ? captureMaterialDelta : captureMaterialDelta - 1000000;
             }
             else
             {
