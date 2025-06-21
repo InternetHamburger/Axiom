@@ -345,7 +345,6 @@ namespace Axiom.src.core.Board
 
             if (IsWhite)
             {
-                BitBoardUtlity.PrintBitBoard(bitboard);
                 if (((((bitboard & MoveGenConstants.WhitePawnCaptureLeftMask) << 7) | ((bitboard & MoveGenConstants.WhitePawnCaptureRightMask) << 9)) & BitBoards[Piece.WhitePawn]) != 0)
                 {
                     return true;

@@ -426,6 +426,12 @@ namespace Axiom.src.core.Search
                 // No need to filter illegal castling moves
                 // as they are not generated in qSearch
 
+                // Skip bad captures
+                if (!StaticExchangeEvaluation.SEE(board, move, 0))
+                {
+                    continue;
+                }
+
                 board.MakeMove(move);
 
                 // Filter illegal moves
