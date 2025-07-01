@@ -437,6 +437,7 @@ namespace Axiom.src.core.Board
                     int targetSquare = square + (MoveGenConstants.DirectionOffSets[directionIndex] * (n + 1));
                     ulong targetBitboard = 1UL << targetSquare;
                     byte pieceOnTargetSquare = Squares[targetSquare];
+                    bool isOccupied = (targetBitboard & occupied) != 0;
 
                     // Blocked by non-slider piece
                     if ((targetBitboard & nonSliders) != 0)
@@ -444,13 +445,12 @@ namespace Axiom.src.core.Board
                         break;
                     }
 
-
-                    if (Piece.IsDiagonalSlider(pieceOnTargetSquare) && directionIndex > 3)
+                    if (Piece.IsDiagonalSlider(pieceOnTargetSquare) && directionIndex > 3 && isOccupied)
                     {
                         attackers |= targetBitboard;
                         break;
                     }
-                    else if (Piece.IsOrthogonalSlider(pieceOnTargetSquare) && directionIndex < 4)
+                    else if (Piece.IsOrthogonalSlider(pieceOnTargetSquare) && directionIndex < 4 && isOccupied)
                     {
                         attackers |= targetBitboard;
                         break;
