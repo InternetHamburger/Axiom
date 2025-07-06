@@ -40,10 +40,9 @@ namespace Axiom.src.core.Perft
                 for (int i = 1; i <= maxDepth; i++)
                 {
                     engine.Search(i);
-                    if (i == maxDepth)
-                    {
-                        totalPositions += (ulong)engine.SearchedNodes;
-                    }
+
+                    totalPositions += (ulong)engine.SearchedNodes;
+                    
                 }
 
                 line = reader.ReadLine();
